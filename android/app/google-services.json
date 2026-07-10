@@ -1,0 +1,83 @@
+{
+  "project_info": {
+    "project_number": "782393433613",
+    "firebase_url": "https://kitech-solutions-ltd-default-rtdb.firebaseio.com",
+    "project_id": "kitech-solutions-ltd",
+    "storage_bucket": "kitech-solutions-ltd.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:782393433613:android:615e532d82c7081f4bbf44",
+        "android_client_info": {
+          "package_name": "com.example.smart_crop_dryer"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "782393433613-poqgi1jqmvhf05ufmq99915nmsocbsmg.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyATcsfD8kWFyMazhow-u6HonLSYrVXr1zg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "782393433613-poqgi1jqmvhf05ufmq99915nmsocbsmg.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "782393433613-mchlhqvo0imnrmkvv93bful2g56tspcp.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.smartCropDryer"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:782393433613:android:31fc0af1b83cc7bd4bbf44",
+        "android_client_info": {
+          "package_name": "com.kitech.solutions"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "782393433613-poqgi1jqmvhf05ufmq99915nmsocbsmg.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyATcsfD8kWFyMazhow-u6HonLSYrVXr1zg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "782393433613-poqgi1jqmvhf05ufmq99915nmsocbsmg.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "782393433613-mchlhqvo0imnrmkvv93bful2g56tspcp.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.smartCropDryer"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

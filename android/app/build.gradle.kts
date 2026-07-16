@@ -9,9 +9,9 @@ plugins {
 }
 
 android {
+    ndkVersion = "28.2.13676358"
     namespace = "com.example.smart_crop_dryer"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = "27.0.12077973"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11

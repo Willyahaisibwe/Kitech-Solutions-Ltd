@@ -11,6 +11,15 @@ class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
+  // SharedPreferences keys
+  static const String _rememberMeKey = 'remember_me';
+  static const String _savedEmailKey = 'saved_email';
+  static const String _savedPasswordKey = 'saved_password';
+
+  User? get currentUser => _auth.currentUser;
+
+  Stream<User?> get authStateChanges => _auth.authStateChanges();
+
   /// Pick an image from gallery, upload it to Firebase Storage,
   /// and update the user's profileImageUrl in Firestore.
   Future<String?> pickAndUploadProfileImage() async {
@@ -52,15 +61,6 @@ class AuthService {
       throw UserDataException('Failed to upload profile photo: $e');
     }
   }
-
-  // SharedPreferences keys
-  static const String _rememberMeKey = 'remember_me';
-  static const String _savedEmailKey = 'saved_email';
-  static const String _savedPasswordKey = 'saved_password';
-
-  User? get currentUser => _auth.currentUser;
-
-  Stream<User?> get authStateChanges => _auth.authStateChanges();
 
   /// Determine the service type ("dryer" | "farm" | "home") from the device ID prefix
   String? _getDeviceType(String deviceID) {
@@ -257,7 +257,12 @@ class AuthService {
 
             for (final device in userModel.devices) {
               await _validateDeviceID(device.deviceId, device.type, null);
-              await _claimDevice(device.deviceId, device.type, userModel.id);
+              await _claimDevice(
+                device.deviceId,
+                device.type,
+                userModel.id,
+                phoneNumber: userModel.phoneNumber,
+              );
 
               updatedDevices.add(
                 DeviceEntry(
@@ -287,12 +292,37 @@ class AuthService {
             return updatedUserModel;
           }
 
-          // Devices already claimed — verify ownership of each
+          // Devices already claimed — verify ownership of each, but don't
+          // block login entirely if one device has been unclaimed/removed
+          // externally (e.g. manually reset in the Realtime Database).
+          final validDevices = <DeviceEntry>[];
+
           for (final device in userModel.devices) {
-            await _validateDeviceID(device.deviceId, device.type, userModel.id);
+            try {
+              await _validateDeviceID(
+                device.deviceId,
+                device.type,
+                userModel.id,
+              );
+              validDevices.add(device);
+            } catch (e) {
+              print(
+                '⚠️ Device ${device.deviceId} (${device.type}) is no longer '
+                'valid for this user, removing from account: $e',
+              );
+              // Skip this device, but continue logging in with the rest
+            }
           }
 
-          return userModel;
+          if (validDevices.length != userModel.devices.length) {
+            // Sync Firestore so it reflects only the devices that are
+            // actually still valid/owned by this user
+            await _firestore.collection('Users').doc(userModel.id).update({
+              'devices': validDevices.map((d) => d.toMap()).toList(),
+            });
+          }
+
+          return userModel.copyWith(devices: validDevices);
         } catch (e) {
           await signOut(clearRememberedCredentials: false);
           throw e;
@@ -334,20 +364,40 @@ class AuthService {
 
     var userModel = UserModel.fromMap(doc.data() as Map<String, dynamic>);
 
+    // Backfill: if the legacy deviceID isn't yet in the devices array, add it first
+    List<DeviceEntry> currentDevices = List.from(userModel.devices);
+
+    if (userModel.deviceID.isNotEmpty &&
+        !currentDevices.any((d) => d.deviceId == userModel.deviceID)) {
+      final legacyType = _getDeviceType(userModel.deviceID) ?? 'dryer';
+      currentDevices.add(
+        DeviceEntry(
+          deviceId: userModel.deviceID,
+          type: legacyType,
+          claimedAt: userModel.createdAt,
+          isActive: true,
+        ),
+      );
+    }
+
     // Prevent adding a duplicate service type the user already owns
-    if (userModel.devices.any((d) => d.type == deviceType)) {
+    if (currentDevices.any((d) => d.type == deviceType)) {
       throw DeviceException(
         'You already have a ${deviceType[0].toUpperCase()}${deviceType.substring(1)} device linked to your account.',
       );
     }
 
-    // Validate the device is unclaimed
+    // Validate the new device is unclaimed
     await _validateDeviceID(deviceID, deviceType, null);
 
-    // Claim it
-    await _claimDevice(deviceID, deviceType, user.uid);
+    // Claim it — carry over the existing account's phone number
+    await _claimDevice(
+      deviceID,
+      deviceType,
+      user.uid,
+      phoneNumber: userModel.phoneNumber,
+    );
 
-    // Update the user's devices array
     final newDevice = DeviceEntry(
       deviceId: deviceID,
       type: deviceType,
@@ -355,7 +405,7 @@ class AuthService {
       isActive: true,
     );
 
-    final updatedDevices = [...userModel.devices, newDevice];
+    final updatedDevices = [...currentDevices, newDevice];
 
     await _firestore.collection('Users').doc(user.uid).update({
       'devices': updatedDevices.map((d) => d.toMap()).toList(),
@@ -511,8 +561,9 @@ class AuthService {
   Future<void> _claimDevice(
     String deviceID,
     String deviceType,
-    String userID,
-  ) async {
+    String userID, {
+    String? phoneNumber,
+  }) async {
     try {
       final node = _getNodeForType(deviceType);
 
@@ -525,6 +576,9 @@ class AuthService {
         'info/userId': userID,
         'info/paired': true,
         'info/claimedAt': DateTime.now().toIso8601String(),
+        'info/phone': (phoneNumber != null && phoneNumber.isNotEmpty)
+            ? phoneNumber
+            : 'null',
       };
 
       // Service-specific default control values

@@ -33,6 +33,21 @@ class FarmSensorReadingsViewModel extends ChangeNotifier {
     });
   }
 
+  void resetSensorReadings() {
+    _readings = FarmSensorReadings(
+      temperature1: 0,
+      temperature2: 0,
+      temperature3: 0,
+      humidity1: 0,
+      humidity2: 0,
+      humidity3: 0,
+      moisture1: 0,
+      moisture2: 0,
+      moisture3: 0,
+    );
+    notifyListeners();
+  }
+
   @override
   void dispose() {
     _subscription?.cancel();

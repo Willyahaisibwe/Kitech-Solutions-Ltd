@@ -45,6 +45,17 @@ import 'package:smart_crop_dryer/pages/farm_home_page.dart';
 import 'package:smart_crop_dryer/pages/farm_settings_page.dart';
 import 'package:smart_crop_dryer/view_models/farm_network_view_model.dart';
 import 'package:smart_crop_dryer/pages/service_selector_page.dart';
+import 'package:smart_crop_dryer/services/smart_home_control_service.dart';
+import 'package:smart_crop_dryer/services/smart_home_device_info_service.dart';
+import 'package:smart_crop_dryer/services/smart_home_sensors_service.dart';
+import 'package:smart_crop_dryer/services/smart_home_settings_service.dart';
+import 'package:smart_crop_dryer/view_models/smart_home_control_view_model.dart';
+import 'package:smart_crop_dryer/view_models/smart_home_device_info_view_model.dart';
+import 'package:smart_crop_dryer/view_models/smart_home_network_view_model.dart';
+import 'package:smart_crop_dryer/view_models/smart_home_sensors_view_model.dart';
+import 'package:smart_crop_dryer/view_models/smart_home_settings_view_model.dart';
+import 'package:smart_crop_dryer/pages/smart_home_page.dart';
+import 'package:smart_crop_dryer/pages/smart_home_settings_page.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -64,7 +75,7 @@ Future<void> main() async {
           create: (_) =>
               ControlViewModel(controlService: getIt<ControlService>()),
           update: (_, authViewModel, previous) {
-            final deviceId = authViewModel.user?.deviceID;
+            final deviceId = authViewModel.user?.dryerDeviceId;
             if (deviceId != null &&
                 (previous?.controlService.deviceId != deviceId)) {
               return ControlViewModel(
@@ -82,7 +93,7 @@ Future<void> main() async {
           create: (_) =>
               NetworkViewModel(networkService: getIt<NetworkService>()),
           update: (_, authViewModel, previous) {
-            final deviceId = authViewModel.user?.deviceID;
+            final deviceId = authViewModel.user?.dryerDeviceId;
             if (deviceId != null &&
                 (previous?.networkService.deviceId != deviceId)) {
               return NetworkViewModel(
@@ -101,7 +112,7 @@ Future<void> main() async {
             sensorService: getIt<SensorReadingsService>(),
           ),
           update: (_, authViewModel, previous) {
-            final deviceId = authViewModel.user?.deviceID;
+            final deviceId = authViewModel.user?.dryerDeviceId;
             if (deviceId != null &&
                 (previous?.sensorService.deviceId != deviceId)) {
               return SensorReadingsViewModel(
@@ -121,7 +132,7 @@ Future<void> main() async {
           create: (_) =>
               MaxDryingTempViewModel(settingsService: getIt<SettingsService>()),
           update: (_, authViewModel, previous) {
-            final deviceId = authViewModel.user?.deviceID;
+            final deviceId = authViewModel.user?.dryerDeviceId;
             if (deviceId != null &&
                 (previous?.settingsService.deviceId != deviceId)) {
               return MaxDryingTempViewModel(
@@ -142,7 +153,7 @@ Future<void> main() async {
             deviceInfoService: getIt<DeviceInfoService>(),
           ),
           update: (_, authViewModel, previous) {
-            final deviceId = authViewModel.user?.deviceID;
+            final deviceId = authViewModel.user?.dryerDeviceId;
             if (deviceId != null &&
                 (previous?.deviceInfoService.deviceId != deviceId)) {
               return DeviceInfoViewModel(
@@ -303,6 +314,115 @@ Future<void> main() async {
                 );
           },
         ),
+        // ===================== SMART HOME PROVIDERS =====================
+
+        //SmartHomeControlViewModel depends on AuthViewModel to get homeDeviceId
+        ChangeNotifierProxyProvider<AuthViewModel, SmartHomeControlViewModel>(
+          create: (_) => SmartHomeControlViewModel(
+            controlService: getIt<SmartHomeControlService>(),
+          ),
+          update: (_, authViewModel, previous) {
+            final deviceId = authViewModel.user?.homeDeviceId;
+            if (deviceId != null &&
+                (previous?.controlService.deviceId != deviceId)) {
+              return SmartHomeControlViewModel(
+                controlService: getIt<SmartHomeControlService>(),
+                deviceId: deviceId,
+              );
+            }
+            return previous ??
+                SmartHomeControlViewModel(
+                  controlService: getIt<SmartHomeControlService>(),
+                );
+          },
+        ),
+
+        //SmartHomeSensorsViewModel depends on AuthViewModel to get homeDeviceId
+        ChangeNotifierProxyProvider<AuthViewModel, SmartHomeSensorsViewModel>(
+          create: (_) => SmartHomeSensorsViewModel(
+            sensorsService: getIt<SmartHomeSensorsService>(),
+          ),
+          update: (_, authViewModel, previous) {
+            final deviceId = authViewModel.user?.homeDeviceId;
+            if (deviceId != null &&
+                (previous?.sensorsService.deviceId != deviceId)) {
+              return SmartHomeSensorsViewModel(
+                sensorsService: getIt<SmartHomeSensorsService>(),
+                deviceId: deviceId,
+              );
+            }
+            return previous ??
+                SmartHomeSensorsViewModel(
+                  sensorsService: getIt<SmartHomeSensorsService>(),
+                );
+          },
+        ),
+
+        //SmartHomeSettingsViewModel depends on AuthViewModel to get homeDeviceId
+        ChangeNotifierProxyProvider<AuthViewModel, SmartHomeSettingsViewModel>(
+          create: (_) => SmartHomeSettingsViewModel(
+            settingsService: getIt<SmartHomeSettingsService>(),
+          ),
+          update: (_, authViewModel, previous) {
+            final deviceId = authViewModel.user?.homeDeviceId;
+            if (deviceId != null &&
+                (previous?.settingsService.deviceId != deviceId)) {
+              return SmartHomeSettingsViewModel(
+                settingsService: getIt<SmartHomeSettingsService>(),
+                deviceId: deviceId,
+              );
+            }
+            return previous ??
+                SmartHomeSettingsViewModel(
+                  settingsService: getIt<SmartHomeSettingsService>(),
+                );
+          },
+        ),
+
+        //SmartHomeDeviceInfoViewModel depends on AuthViewModel to get homeDeviceId
+        ChangeNotifierProxyProvider<
+          AuthViewModel,
+          SmartHomeDeviceInfoViewModel
+        >(
+          create: (_) => SmartHomeDeviceInfoViewModel(
+            deviceInfoService: getIt<SmartHomeDeviceInfoService>(),
+          ),
+          update: (_, authViewModel, previous) {
+            final deviceId = authViewModel.user?.homeDeviceId;
+            if (deviceId != null &&
+                (previous?.deviceInfoService.deviceId != deviceId)) {
+              return SmartHomeDeviceInfoViewModel(
+                deviceInfoService: getIt<SmartHomeDeviceInfoService>(),
+                deviceId: deviceId,
+              );
+            }
+            return previous ??
+                SmartHomeDeviceInfoViewModel(
+                  deviceInfoService: getIt<SmartHomeDeviceInfoService>(),
+                );
+          },
+        ),
+
+        //SmartHomeNetworkViewModel depends on AuthViewModel to get homeDeviceId
+        ChangeNotifierProxyProvider<AuthViewModel, SmartHomeNetworkViewModel>(
+          create: (_) => SmartHomeNetworkViewModel(
+            deviceInfoService: getIt<SmartHomeDeviceInfoService>(),
+          ),
+          update: (_, authViewModel, previous) {
+            final deviceId = authViewModel.user?.homeDeviceId;
+            if (deviceId != null &&
+                (previous?.deviceInfoService.deviceId != deviceId)) {
+              return SmartHomeNetworkViewModel(
+                deviceInfoService: getIt<SmartHomeDeviceInfoService>(),
+                deviceId: deviceId,
+              );
+            }
+            return previous ??
+                SmartHomeNetworkViewModel(
+                  deviceInfoService: getIt<SmartHomeDeviceInfoService>(),
+                );
+          },
+        ),
       ],
       child: const MyApp(),
     ),
@@ -352,6 +472,8 @@ class MyApp extends StatelessWidget {
         '/farmHome': (context) => const FarmHomePage(),
         '/farmSettings': (context) => const FarmSettingsPage(),
         '/serviceSelector': (context) => const ServiceSelectorPage(),
+        '/homeHome': (context) => const SmartHomePage(),
+        '/smartHomeSettings': (context) => const SmartHomeSettingsPage(),
       },
     );
   }

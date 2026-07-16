@@ -12,6 +12,10 @@ import 'package:smart_crop_dryer/services/farm_control_service.dart';
 import 'package:smart_crop_dryer/services/farm_sensor_readings_service.dart';
 import 'package:smart_crop_dryer/services/farm_settings_service.dart';
 import 'package:smart_crop_dryer/services/farm_device_info_service.dart';
+import 'package:smart_crop_dryer/services/smart_home_control_service.dart';
+import 'package:smart_crop_dryer/services/smart_home_device_info_service.dart';
+import 'package:smart_crop_dryer/services/smart_home_sensors_service.dart';
+import 'package:smart_crop_dryer/services/smart_home_settings_service.dart';
 
 final getIt = GetIt.instance;
 
@@ -35,4 +39,18 @@ void setupDependencies() {
   );
   getIt.registerSingleton<FarmSettingsService>(FarmSettingsService(null));
   getIt.registerSingleton<FarmDeviceInfoService>(FarmDeviceInfoService(null));
+
+  // SERVICES - Smart Home
+  getIt.registerSingleton<SmartHomeControlService>(
+    SmartHomeControlService(null),
+  );
+  getIt.registerSingleton<SmartHomeDeviceInfoService>(
+    SmartHomeDeviceInfoService(null),
+  );
+  getIt.registerSingleton<SmartHomeSensorsService>(
+    SmartHomeSensorsService(null),
+  );
+  getIt.registerSingleton<SmartHomeSettingsService>(
+    SmartHomeSettingsService(null),
+  );
 }

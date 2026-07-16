@@ -50,7 +50,11 @@ dependencies:
   google_fonts: ^6.3.3
   intl_phone_number_input: ^0.7.5
   url_launcher: ^6.3.2
-
+  speech_to_text: ^7.0.0
+  flutter_tts: ^4.0.2
+  permission_handler: ^11.3.1
+  just_audio: ^0.9.40
+  
 dev_dependencies:
   flutter_test:
     sdk: flutter

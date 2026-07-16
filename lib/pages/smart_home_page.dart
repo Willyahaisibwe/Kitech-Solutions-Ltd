@@ -2,27 +2,54 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:smart_crop_dryer/pages/service_selector_page.dart';
 import 'package:smart_crop_dryer/view_models/auth_view_model.dart';
-import 'package:smart_crop_dryer/view_models/farm_control_view_model.dart';
-import 'package:smart_crop_dryer/view_models/farm_network_view_model.dart';
-import 'package:smart_crop_dryer/view_models/farm_sensor_readings_view_model.dart';
+import 'package:smart_crop_dryer/view_models/smart_home_control_view_model.dart';
+import 'package:smart_crop_dryer/view_models/smart_home_network_view_model.dart';
+import 'package:smart_crop_dryer/view_models/smart_home_sensors_view_model.dart';
+import 'package:smart_crop_dryer/view_models/smart_home_settings_view_model.dart';
 import 'package:smart_crop_dryer/widgets/confirmation_dialog.dart';
 import 'package:smart_crop_dryer/pages/community_page.dart';
 import 'package:smart_crop_dryer/services/auth_service.dart';
 import 'package:smart_crop_dryer/services/error_handler.dart';
 import 'package:smart_crop_dryer/models/voice_command.dart';
 import 'package:smart_crop_dryer/widgets/voice_command_button.dart';
-import 'package:smart_crop_dryer/view_models/farm_settings_view_model.dart';
-import 'package:smart_crop_dryer/widgets/radio_player_card.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
-class FarmHomePage extends StatefulWidget {
-  const FarmHomePage({super.key});
+class SmartHomePage extends StatefulWidget {
+  const SmartHomePage({super.key});
 
   @override
-  State<FarmHomePage> createState() => _FarmHomePageState();
+  State<SmartHomePage> createState() => _SmartHomePageState();
 }
 
-class _FarmHomePageState extends State<FarmHomePage> {
+class _SmartHomePageState extends State<SmartHomePage>
+    with SingleTickerProviderStateMixin {
   bool _hasHandledOfflineState = false;
+  late AnimationController _fanController;
+  late Animation<double> _fanAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _fanController = AnimationController(
+      duration: const Duration(milliseconds: 500),
+      vsync: this,
+    );
+    _fanAnimation = Tween<double>(begin: 0, end: 1).animate(_fanController);
+  }
+
+  @override
+  void dispose() {
+    _fanController.dispose();
+    super.dispose();
+  }
+
+  void _updateFanAnimation(bool isRunning) {
+    if (isRunning) {
+      _fanController.repeat();
+    } else {
+      _fanController.stop();
+    }
+  }
 
   void _showNoInternetDialog(BuildContext context) {
     showConfirmationDialog(
@@ -38,23 +65,25 @@ class _FarmHomePageState extends State<FarmHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    final sensorVM = context.watch<FarmSensorReadingsViewModel>();
-    final controlVM = context.watch<FarmControlViewModel>();
-    final networkVM = context.watch<FarmNetworkViewModel>();
+    final sensorsVM = context.watch<SmartHomeSensorsViewModel>();
+    final controlVM = context.watch<SmartHomeControlViewModel>();
+    final networkVM = context.watch<SmartHomeNetworkViewModel>();
     final authVM = context.watch<AuthViewModel>();
 
-    final readings = sensorVM.readings;
+    final sensors = sensorsVM.sensors;
     final isOnline = networkVM.isConnected;
     final hasMultipleServices = (authVM.user?.devices.length ?? 0) > 1;
 
     if (!isOnline && !_hasHandledOfflineState) {
       _hasHandledOfflineState = true;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        sensorVM.resetSensorReadings();
-      });
     } else if (isOnline) {
       _hasHandledOfflineState = false;
     }
+
+    // Update fan spin animation when fan state or connection changes
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _updateFanAnimation(controlVM.control.fan && isOnline);
+    });
 
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
@@ -64,10 +93,10 @@ class _FarmHomePageState extends State<FarmHomePage> {
         scrolledUnderElevation: 0,
         title: Row(
           children: [
-            Icon(Icons.eco, color: Colors.green.shade700),
+            Icon(Icons.home_outlined, color: Colors.green.shade700),
             const SizedBox(width: 8),
             const Text(
-              "Smart Farm",
+              "Smart Home",
               style: TextStyle(fontWeight: FontWeight.w600),
             ),
           ],
@@ -75,7 +104,7 @@ class _FarmHomePageState extends State<FarmHomePage> {
         actions: [
           VoiceCommandButton(
             activeColor: Colors.green.shade700,
-            commands: _buildFarmVoiceCommands(
+            commands: _buildSmartHomeVoiceCommands(
               context,
               controlVM,
               isOnline,
@@ -122,7 +151,6 @@ class _FarmHomePageState extends State<FarmHomePage> {
         backgroundColor: Colors.white,
         child: Column(
           children: [
-            // User Header
             Container(
               width: double.infinity,
               padding: const EdgeInsets.fromLTRB(20, 60, 20, 30),
@@ -176,7 +204,7 @@ class _FarmHomePageState extends State<FarmHomePage> {
                                   ),
                                 )
                               : const Icon(
-                                  Icons.eco,
+                                  Icons.home_outlined,
                                   size: 50,
                                   color: Colors.white,
                                 ),
@@ -224,8 +252,6 @@ class _FarmHomePageState extends State<FarmHomePage> {
                 ],
               ),
             ),
-
-            // Menu Items
             Expanded(
               child: ListView(
                 padding: const EdgeInsets.symmetric(vertical: 8),
@@ -242,19 +268,10 @@ class _FarmHomePageState extends State<FarmHomePage> {
                   _buildDrawerItem(
                     context: context,
                     icon: Icons.settings_outlined,
-                    title: 'Moisture Settings',
+                    title: 'Home Settings',
                     onTap: () {
                       Navigator.pop(context);
-                      Navigator.pushNamed(context, "/farmSettings");
-                    },
-                  ),
-                  _buildDrawerItem(
-                    context: context,
-                    icon: Icons.wb_sunny_outlined,
-                    title: 'Weather Info',
-                    onTap: () {
-                      Navigator.pop(context);
-                      Navigator.pushNamed(context, "/weather");
+                      Navigator.pushNamed(context, "/smartHomeSettings");
                     },
                   ),
                   _buildDrawerItem(
@@ -336,240 +353,171 @@ class _FarmHomePageState extends State<FarmHomePage> {
           ],
         ),
       ),
-      body: sensorVM.isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Header banner
+            Container(
               padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
+              decoration: BoxDecoration(
+                color: Colors.green.shade700,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  // Mode banner (read-only, no toggle here)
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        "Smart Home",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                      Text(
+                        sensors.motion ? "Motion detected" : "All quiet",
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ],
+                  ),
                   Container(
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: Colors.green.shade700,
-                      borderRadius: BorderRadius.circular(16),
+                      color: Colors.white.withValues(alpha: .15),
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              "Smart Farm",
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                              ),
-                            ),
-                            Text(
-                              controlVM.control.autoMode
-                                  ? "Automatic Mode Active"
-                                  : "Manual Mode",
-                              style: const TextStyle(
-                                color: Colors.white70,
-                                fontSize: 13,
-                              ),
-                            ),
-                          ],
-                        ),
-                        Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: .15),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: const Icon(Icons.eco, color: Colors.white),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  // Temperature card (3 probes)
-                  _multiProbeCard(
-                    icon: Icons.thermostat,
-                    iconColor: Colors.orange,
-                    label: "Temperature",
-                    unit: "°C",
-                    labels: const ["T1", "T2", "T3"],
-                    v1: readings?.temperature1,
-                    v2: readings?.temperature2,
-                    v3: readings?.temperature3,
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Humidity card (3 probes)
-                  _multiProbeCard(
-                    icon: Icons.water_drop,
-                    iconColor: Colors.blue,
-                    label: "Humidity",
-                    unit: "%",
-                    labels: const ["H1", "H2", "H3"],
-                    v1: readings?.humidity1,
-                    v2: readings?.humidity2,
-                    v3: readings?.humidity3,
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Moisture card (3 probes) + settings shortcut
-                  _multiProbeCard(
-                    icon: Icons.grass,
-                    iconColor: Colors.brown,
-                    label: "Soil Moisture",
-                    unit: "%",
-                    labels: const ["M1", "M2", "M3"],
-                    v1: readings?.moisture1,
-                    v2: readings?.moisture2,
-                    v3: readings?.moisture3,
-                    settingsLabel: "Moisture settings",
-                    onSettingsTap: () {
-                      Navigator.pushNamed(context, '/farmSettings');
-                    },
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  // Pump control card
-                  Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: .05),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: Colors.blue.shade50,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Icon(Icons.water, color: Colors.blue.shade600),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                "Water Pump",
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 16,
-                                ),
-                              ),
-                              Text(
-                                controlVM.control.pumpState
-                                    ? "Currently running"
-                                    : "Currently off",
-                                style: TextStyle(
-                                  color: Colors.grey.shade600,
-                                  fontSize: 13,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Switch(
-                          value: controlVM.control.pumpState,
-                          activeColor: Colors.blue,
-                          onChanged: controlVM.control.autoMode
-                              ? null
-                              : (value) {
-                                  if (!isOnline) {
-                                    _showNoInternetDialog(context);
-                                    return;
-                                  }
-                                  controlVM.togglePump(value);
-                                },
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  // Auto / Manual mode control card
-                  Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: .05),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: Colors.green.shade50,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Icon(
-                            controlVM.control.autoMode
-                                ? Icons.auto_mode
-                                : Icons.back_hand_outlined,
-                            color: Colors.green.shade600,
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                "Automatic Mode",
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 16,
-                                ),
-                              ),
-                              Text(
-                                controlVM.control.autoMode
-                                    ? "Pump runs automatically"
-                                    : "Manual control",
-                                style: TextStyle(
-                                  color: Colors.grey.shade600,
-                                  fontSize: 13,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Switch(
-                          value: controlVM.control.autoMode,
-                          activeColor: Colors.green,
-                          onChanged: (value) {
-                            if (!isOnline) {
-                              _showNoInternetDialog(context);
-                              return;
-                            }
-                            controlVM.toggleAutoMode(value);
-                          },
-                        ),
-                      ],
-                    ),
+                    child: const Icon(Icons.home_outlined, color: Colors.white),
                   ),
                 ],
               ),
             ),
+
+            const SizedBox(height: 20),
+
+            // Sensors card (Motion + Temperature)
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: .05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  _sensorTile(
+                    icon: Icons.thermostat,
+                    iconColor: Colors.orange,
+                    label: "Temperature",
+                    value: "${sensors.temperature.toStringAsFixed(1)}°C",
+                  ),
+                  Container(width: 1, height: 50, color: Colors.grey.shade200),
+                  _sensorTile(
+                    icon: Icons.sensors,
+                    iconColor: sensors.motion
+                        ? Colors.red
+                        : Colors.grey.shade400,
+                    label: "Motion",
+                    value: sensors.motion ? "Detected" : "Clear",
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 16),
+
+            // Light 1
+            _toggleCard(
+              icon: Icons.lightbulb_outline,
+              iconColor: Colors.amber,
+              title: "Light 1",
+              subtitle: controlVM.control.light1 ? "On" : "Off",
+              value: controlVM.control.light1,
+              onChanged: (value) {
+                if (!isOnline) {
+                  _showNoInternetDialog(context);
+                  return;
+                }
+                controlVM.toggleLight1(value);
+              },
+            ),
+            const SizedBox(height: 16),
+
+            // Light 2
+            _toggleCard(
+              icon: Icons.lightbulb_outline,
+              iconColor: Colors.amber,
+              title: "Light 2",
+              subtitle: controlVM.control.light2 ? "On" : "Off",
+              value: controlVM.control.light2,
+              onChanged: (value) {
+                if (!isOnline) {
+                  _showNoInternetDialog(context);
+                  return;
+                }
+                controlVM.toggleLight2(value);
+              },
+            ),
+            const SizedBox(height: 16),
+
+            // Fan
+            _toggleCard(
+              iconWidget: RotationTransition(
+                turns: _fanAnimation,
+                child: Icon(
+                  MdiIcons.fan,
+                  color: controlVM.control.fan && isOnline
+                      ? Colors.blue
+                      : Colors.grey.shade600,
+                ),
+              ),
+              iconColor: Colors.blue,
+              title: "Fan",
+              subtitle: controlVM.control.fan ? "Running" : "Off",
+              value: controlVM.control.fan,
+              onChanged: (value) {
+                if (!isOnline) {
+                  _showNoInternetDialog(context);
+                  return;
+                }
+                controlVM.toggleFan(value);
+              },
+            ),
+            const SizedBox(height: 16),
+
+            // Alarm
+            _toggleCard(
+              icon: Icons.notifications_active_outlined,
+              iconColor: Colors.red,
+              title: "Alarm",
+              subtitle: controlVM.control.alarm ? "Armed" : "Disarmed",
+              value: controlVM.control.alarm,
+              activeColor: Colors.red,
+              onChanged: (value) {
+                if (!isOnline) {
+                  _showNoInternetDialog(context);
+                  return;
+                }
+                controlVM.toggleAlarm(value);
+              },
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -603,18 +551,47 @@ class _FarmHomePageState extends State<FarmHomePage> {
     );
   }
 
-  Widget _multiProbeCard({
+  Widget _sensorTile({
     required IconData icon,
     required Color iconColor,
     required String label,
-    required String unit,
-    required List<String> labels,
-    required double? v1,
-    required double? v2,
-    required double? v3,
-    String? settingsLabel,
-    VoidCallback? onSettingsTap,
+    required String value,
   }) {
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: iconColor.withValues(alpha: .1),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(icon, color: iconColor, size: 22),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          label,
+          style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          value,
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        ),
+      ],
+    );
+  }
+
+  Widget _toggleCard({
+    IconData? icon,
+    Widget? iconWidget,
+    required Color iconColor,
+    required String title,
+    required String subtitle,
+    required bool value,
+    required ValueChanged<bool> onChanged,
+    Color? activeColor,
+  }) {
+    assert(icon != null || iconWidget != null, 'Provide icon or iconWidget');
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -628,175 +605,198 @@ class _FarmHomePageState extends State<FarmHomePage> {
           ),
         ],
       ),
-      child: Column(
+      child: Row(
         children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: iconColor.withValues(alpha: .1),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(icon, color: iconColor, size: 24),
-              ),
-              const SizedBox(width: 12),
-              Text(
-                label,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              _probeValue(labels[0], v1, unit),
-              _probeValue(labels[1], v2, unit),
-              _probeValue(labels[2], v3, unit),
-            ],
-          ),
-          if (settingsLabel != null && onSettingsTap != null) ...[
-            const SizedBox(height: 8),
-            TextButton.icon(
-              onPressed: onSettingsTap,
-              icon: Icon(Icons.settings, size: 18, color: iconColor),
-              label: Text(
-                settingsLabel,
-                style: TextStyle(color: iconColor, fontSize: 13),
-              ),
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: iconColor.withValues(alpha: .1),
+              borderRadius: BorderRadius.circular(12),
             ),
-          ],
+            child: iconWidget ?? Icon(icon, color: iconColor),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 16,
+                  ),
+                ),
+                Text(
+                  subtitle,
+                  style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+                ),
+              ],
+            ),
+          ),
+          Switch(
+            value: value,
+            activeColor: activeColor ?? iconColor,
+            onChanged: onChanged,
+          ),
         ],
       ),
     );
   }
 
-  Widget _probeValue(String label, double? value, String unit) {
-    return Column(
-      children: [
-        Text(
-          label,
-          style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          value != null ? "${value.toStringAsFixed(1)}$unit" : "--",
-          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-        ),
-      ],
-    );
-  }
-
-  List<VoiceCommand> _buildFarmVoiceCommands(
+  List<VoiceCommand> _buildSmartHomeVoiceCommands(
     BuildContext context,
-    FarmControlViewModel controlVM,
+    SmartHomeControlViewModel controlVM,
     bool isOnline,
     String userName,
   ) {
     return [
-      // Pump ON
+      // Light 1
+      VoiceCommand(
+        triggers: ['turn on light 1', 'turn on the first light', 'light 1 on'],
+        onMatch: (_) {
+          if (!isOnline) {
+            return 'Sorry $userName, the system is currently offline. Please check your connection.';
+          }
+          controlVM.toggleLight1(true);
+          return null;
+        },
+        confirmationText: (_) => 'Turning on light 1.',
+      ),
       VoiceCommand(
         triggers: [
-          'turn on the pump',
-          'turn on pump',
-          'turn pump on',
-          'start the pump',
-          'start pump',
-          'pump on',
+          'turn off light 1',
+          'turn off the first light',
+          'light 1 off',
         ],
         onMatch: (_) {
           if (!isOnline) {
             return 'Sorry $userName, the system is currently offline. Please check your connection.';
           }
-          controlVM.togglePump(true);
+          controlVM.toggleLight1(false);
           return null;
         },
-        confirmationText: (_) => 'Turning on the water pump.',
+        confirmationText: (_) => 'Turning off light 1.',
       ),
 
-      // Pump OFF
+      // Light 2
+      VoiceCommand(
+        triggers: ['turn on light 2', 'turn on the second light', 'light 2 on'],
+        onMatch: (_) {
+          if (!isOnline) {
+            return 'Sorry $userName, the system is currently offline. Please check your connection.';
+          }
+          controlVM.toggleLight2(true);
+          return null;
+        },
+        confirmationText: (_) => 'Turning on light 2.',
+      ),
       VoiceCommand(
         triggers: [
-          'turn off the pump',
-          'turn off pump',
-          'turn pump off',
-          'stop the pump',
-          'stop pump',
-          'pump off',
+          'turn off light 2',
+          'turn off the second light',
+          'light 2 off',
         ],
         onMatch: (_) {
           if (!isOnline) {
             return 'Sorry $userName, the system is currently offline. Please check your connection.';
           }
-          controlVM.togglePump(false);
+          controlVM.toggleLight2(false);
           return null;
         },
-        confirmationText: (_) => 'Turning off the water pump.',
+        confirmationText: (_) => 'Turning off light 2.',
       ),
 
-      // Automatic mode
+      // Lights (both)
+      VoiceCommand(
+        triggers: ['turn on the lights', 'turn on lights', 'lights on'],
+        onMatch: (_) {
+          if (!isOnline) {
+            return 'Sorry $userName, the system is currently offline. Please check your connection.';
+          }
+          controlVM.toggleLight1(true);
+          controlVM.toggleLight2(true);
+          return null;
+        },
+        confirmationText: (_) => 'Turning on the lights.',
+      ),
+      VoiceCommand(
+        triggers: ['turn off the lights', 'turn off lights', 'lights off'],
+        onMatch: (_) {
+          if (!isOnline) {
+            return 'Sorry $userName, the system is currently offline. Please check your connection.';
+          }
+          controlVM.toggleLight1(false);
+          controlVM.toggleLight2(false);
+          return null;
+        },
+        confirmationText: (_) => 'Turning off the lights.',
+      ),
+
+      // Fan
+      VoiceCommand(
+        triggers: ['turn on the fan', 'turn on fan', 'start the fan', 'fan on'],
+        onMatch: (_) {
+          if (!isOnline) {
+            return 'Sorry $userName, the system is currently offline. Please check your connection.';
+          }
+          controlVM.toggleFan(true);
+          return null;
+        },
+        confirmationText: (_) => 'Turning on the fan.',
+      ),
       VoiceCommand(
         triggers: [
-          'switch to automatic',
-          'automatic mode',
-          'auto mode',
-          'turn on automatic mode',
-          'set to automatic',
+          'turn off the fan',
+          'turn off fan',
+          'stop the fan',
+          'fan off',
         ],
         onMatch: (_) {
           if (!isOnline) {
             return 'Sorry $userName, the system is currently offline. Please check your connection.';
           }
-          controlVM.toggleAutoMode(true);
+          controlVM.toggleFan(false);
           return null;
         },
-        confirmationText: (_) => 'Switching to automatic mode.',
+        confirmationText: (_) => 'Turning off the fan.',
       ),
 
-      // Manual mode
+      // Alarm
       VoiceCommand(
         triggers: [
-          'switch to manual',
-          'manual mode',
-          'turn on manual mode',
-          'set to manual',
+          'arm the alarm',
+          'turn on the alarm',
+          'activate alarm',
+          'alarm on',
         ],
         onMatch: (_) {
           if (!isOnline) {
             return 'Sorry $userName, the system is currently offline. Please check your connection.';
           }
-          controlVM.toggleAutoMode(false);
+          controlVM.toggleAlarm(true);
           return null;
         },
-        confirmationText: (_) => 'Switching to manual mode.',
+        confirmationText: (_) => 'Arming the alarm.',
       ),
-
-      // Moisture threshold
       VoiceCommand(
         triggers: [
-          'set moisture threshold to',
-          'set threshold to',
-          'set moisture to',
+          'disarm the alarm',
+          'turn off the alarm',
+          'deactivate alarm',
+          'alarm off',
         ],
-        expectsNumber: true,
-        onMatch: (number) {
+        onMatch: (_) {
           if (!isOnline) {
             return 'Sorry $userName, the system is currently offline. Please check your connection.';
           }
-          if (number == null) return null;
-          final settingsVM = context.read<FarmSettingsViewModel>();
-          settingsVM.updateThresholdMoist(number);
+          controlVM.toggleAlarm(false);
           return null;
         },
-        confirmationText: (number) =>
-            'Setting moisture threshold to ${number?.toStringAsFixed(0)} percent.',
+        confirmationText: (_) => 'Disarming the alarm.',
       ),
 
-      // Greetings — respond with the user's name
+      // Greetings — matching Farm page tone
       VoiceCommand(
         triggers: ['hello', 'hi there', 'hi '],
         onMatch: (_) => null,

@@ -279,16 +279,6 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
             value: userViewModel?.user?.email.toString() ?? "No set",
           ),
           SizedBox(height: 12),
-          _buildInfoRowWithAction(
-            icon: Icons.device_hub,
-            label: "Device ID",
-            value: userViewModel?.user?.deviceID.toString() ?? "No set",
-            actionIcon: Icons.info,
-            onActionPressed: () {
-              _onDeviceIdInfoPressed();
-            },
-          ),
-          SizedBox(height: 12),
           _buildInfoRow(
             icon: Icons.calendar_today_outlined,
             label: "Member Since",

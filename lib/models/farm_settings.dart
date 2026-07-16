@@ -14,6 +14,10 @@ class FarmSettings {
   }
 
   FarmSettings copyWith({double? thresholdMoist}) {
-    return FarmSettings(thresholdMoist: thresholdMoist ?? this.thresholdMoist);
+    return FarmSettings(
+      thresholdMoist: thresholdMoist != null
+          ? double.parse(thresholdMoist.toStringAsFixed(1))
+          : this.thresholdMoist,
+    );
   }
 }

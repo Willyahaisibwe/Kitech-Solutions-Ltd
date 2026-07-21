@@ -19,9 +19,8 @@ class SettingsService {
   Future<void> updateMaxDryingTempSetting(MaxDryingTemp maxDryingTemp) async {
     try {
       await ref!.update({'thresholdTemp': maxDryingTemp.value});
-      print('✅ Setting updated: ${maxDryingTemp.value}');
     } catch (e) {
-      print('❌ Error updating setting: $e');
+      // Error updating setting
     }
   }
 
@@ -35,14 +34,10 @@ class SettingsService {
           if (value != null && value is num) {
             return MaxDryingTemp(value: value.toDouble());
           } else {
-            print(
-              '⚠️ Warning: thresholdTemp is null or not a number. Using default 30.0',
-            );
             return MaxDryingTemp(value: 30.0);
           }
         })
         .handleError((error) {
-          print('❌ Error listening to thresholdTemp: $error');
           return MaxDryingTemp(value: 30.0);
         });
   }

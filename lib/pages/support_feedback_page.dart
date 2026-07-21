@@ -6,7 +6,7 @@ class SupportFeedbackPage extends StatelessWidget {
   final String supportEmail = "williamahaisibwe@gmail.com";
   final String supportWhatsApp = "+256706727525";
 
-  const SupportFeedbackPage({Key? key}) : super(key: key);
+  const SupportFeedbackPage({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -112,60 +112,6 @@ class SupportFeedbackPage extends StatelessWidget {
               color: Colors.blue,
               onTap: () => _makePhoneCall(supportWhatsApp),
             ),
-
-            //SizedBox(height: 32),
-
-            // // Other Options
-            // _buildSectionHeader("Other Options"),
-            // SizedBox(height: 12),
-            // _buildActionTile(
-            //   icon: Icons.help_outline,
-            //   title: "Help Center",
-            //   subtitle: "Browse FAQs and guides",
-            //   onTap: () {
-            //     // Navigate to help center or open URL
-            //     _showComingSoon(context, "Help Center");
-            //   },
-            // ),
-            // SizedBox(height: 8),
-            // _buildActionTile(
-            //   icon: Icons.star_outline,
-            //   title: "Rate Our App",
-            //   subtitle: "Help others discover us",
-            //   onTap: () {
-            //     // Open app store rating
-            //     _showComingSoon(context, "App Rating");
-            //   },
-            // ),
-
-            // SizedBox(height: 32),
-
-            // // Info Footer
-            // Container(
-            //   padding: EdgeInsets.all(16),
-            //   decoration: BoxDecoration(
-            //     color: Colors.blue.shade50,
-            //     borderRadius: BorderRadius.circular(12),
-            //     border: Border.all(color: Colors.blue.shade100),
-            //   ),
-            //   child: Row(
-            //     children: [
-            //       Icon(Icons.info_outline, color: Colors.blue.shade700, size: 20),
-            //       SizedBox(width: 12),
-            //       Expanded(
-            //         child: Text(
-            //           "We typically respond within 24 hours on weekdays.",
-            //           style: TextStyle(
-            //             fontSize: 13,
-            //             color: Colors.blue.shade900,
-            //           ),
-            //         ),
-            //       ),
-            //     ],
-            //   ),
-            // ),
-
-            // SizedBox(height: 20),
           ],
         ),
       ),
@@ -256,53 +202,6 @@ class SupportFeedbackPage extends StatelessWidget {
     );
   }
 
-  Widget _buildActionTile({
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.grey.shade200),
-        ),
-        child: Row(
-          children: [
-            Icon(icon, color: Colors.grey.shade700, size: 24),
-            SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.grey.shade800,
-                    ),
-                  ),
-                  SizedBox(height: 2),
-                  Text(
-                    subtitle,
-                    style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
-                  ),
-                ],
-              ),
-            ),
-            Icon(Icons.chevron_right, color: Colors.grey.shade400, size: 20),
-          ],
-        ),
-      ),
-    );
-  }
-
   // Launch email client
   Future<void> _launchEmail(String email, String subject) async {
     final Uri emailUri = Uri(
@@ -318,7 +217,7 @@ class SupportFeedbackPage extends StatelessWidget {
         throw 'Could not launch email client';
       }
     } catch (e) {
-      print('Error launching email: $e');
+      debugPrint('Error launching email: $e');
       // You can show a snackbar here to inform the user
     }
   }
@@ -338,7 +237,7 @@ class SupportFeedbackPage extends StatelessWidget {
         throw 'WhatsApp is not installed';
       }
     } catch (e) {
-      print('Error launching WhatsApp: $e');
+      debugPrint('Error launching WhatsApp: $e');
     }
   }
 
@@ -352,16 +251,7 @@ class SupportFeedbackPage extends StatelessWidget {
         throw 'Could not launch phone dialer';
       }
     } catch (e) {
-      print('Error making phone call: $e');
+      debugPrint('Error making phone call: $e');
     }
-  }
-
-  void _showComingSoon(BuildContext context, String feature) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('$feature coming soon!'),
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
   }
 }

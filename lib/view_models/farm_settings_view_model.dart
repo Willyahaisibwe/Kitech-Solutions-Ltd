@@ -39,7 +39,7 @@ class FarmSettingsViewModel extends ChangeNotifier {
       final updated = _settings.copyWith(thresholdMoist: value);
       await settingsService.updateThresholdMoistSetting(updated);
     } catch (e) {
-      print('❌ Error updating threshold moisture: $e');
+      // Error updating threshold moisture
     } finally {
       _isLoading = false;
       notifyListeners();

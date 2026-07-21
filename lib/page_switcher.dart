@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:smart_crop_dryer/pages/home_page.dart';
+import 'package:smart_crop_dryer/services/auth_service.dart';
+import 'package:smart_crop_dryer/services/error_handler.dart';
 import 'package:smart_crop_dryer/pages/service_selector_page.dart';
 import 'package:smart_crop_dryer/view_models/network_view_model.dart';
 import 'package:smart_crop_dryer/view_models/auth_view_model.dart';
@@ -167,13 +169,77 @@ class _PageSwitcherState extends State<PageSwitcher> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Container(
-                    padding: EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: .2),
-                      borderRadius: BorderRadius.circular(12),
+                  GestureDetector(
+                    onTap: () async {
+                      try {
+                        final authService = AuthService();
+                        final url = await authService
+                            .pickAndUploadProfileImage();
+                        if (url != null && context.mounted) {
+                          final updatedUser = authViewModel.user!.copyWith(
+                            profileImageUrl: url,
+                          );
+                          authViewModel.setUser(updatedUser);
+                          ErrorHandler.showSuccess(
+                            context,
+                            'Profile photo updated!',
+                          );
+                        }
+                      } catch (e) {
+                        if (context.mounted) {
+                          ErrorHandler.showError(context, e);
+                        }
+                      }
+                    },
+                    child: Stack(
+                      children: [
+                        Container(
+                          padding: EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: .2),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: authViewModel.user?.profileImageUrl != null
+                              ? ClipRRect(
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: Image.network(
+                                    '${authViewModel.user!.profileImageUrl!}?t=${DateTime.now().millisecondsSinceEpoch}',
+                                    width: 50,
+                                    height: 50,
+                                    fit: BoxFit.cover,
+                                    key: ValueKey(
+                                      authViewModel.user!.profileImageUrl,
+                                    ),
+                                  ),
+                                )
+                              : Icon(
+                                  MdiIcons.sprout,
+                                  size: 50,
+                                  color: Colors.white,
+                                ),
+                        ),
+                        Positioned(
+                          bottom: -2,
+                          right: -2,
+                          child: Container(
+                            padding: EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: Theme.of(context).colorScheme.primary,
+                                width: 2,
+                              ),
+                            ),
+                            child: Icon(
+                              Icons.camera_alt,
+                              size: 14,
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                    child: Icon(MdiIcons.sprout, size: 50, color: Colors.white),
                   ),
                   SizedBox(height: 16),
                   Text(
@@ -564,6 +630,8 @@ class _PageSwitcherState extends State<PageSwitcher> {
         clearRememberedCredentials: true,
       );
 
+      if (!context.mounted) return;
+
       // Close loading dialog
       Navigator.pop(context);
 
@@ -583,6 +651,8 @@ class _PageSwitcherState extends State<PageSwitcher> {
         ),
       );
     } catch (e) {
+      if (!context.mounted) return;
+
       // Close loading dialog if it's open
       Navigator.pop(context);
 

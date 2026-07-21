@@ -5,7 +5,6 @@ import 'package:smart_crop_dryer/view_models/auth_view_model.dart';
 import 'package:smart_crop_dryer/view_models/smart_home_control_view_model.dart';
 import 'package:smart_crop_dryer/view_models/smart_home_network_view_model.dart';
 import 'package:smart_crop_dryer/view_models/smart_home_sensors_view_model.dart';
-import 'package:smart_crop_dryer/view_models/smart_home_settings_view_model.dart';
 import 'package:smart_crop_dryer/widgets/confirmation_dialog.dart';
 import 'package:smart_crop_dryer/pages/community_page.dart';
 import 'package:smart_crop_dryer/services/auth_service.dart';
@@ -171,9 +170,10 @@ class _SmartHomePageState extends State<SmartHomePage>
                         final url = await authService
                             .pickAndUploadProfileImage();
                         if (url != null && context.mounted) {
-                          final updatedUser = authVM.user!.copyWith();
-                          authVM.setUser(updatedUser.copyWith());
-                          await authVM.fetchUserData(authVM.user!.id);
+                          final updatedUser = authVM.user!.copyWith(
+                            profileImageUrl: url,
+                          );
+                          authVM.setUser(updatedUser);
                           ErrorHandler.showSuccess(
                             context,
                             'Profile photo updated!',
@@ -197,10 +197,11 @@ class _SmartHomePageState extends State<SmartHomePage>
                               ? ClipRRect(
                                   borderRadius: BorderRadius.circular(8),
                                   child: Image.network(
-                                    authVM.user!.profileImageUrl!,
+                                    '${authVM.user!.profileImageUrl!}?t=${DateTime.now().millisecondsSinceEpoch}',
                                     width: 50,
                                     height: 50,
                                     fit: BoxFit.cover,
+                                    key: ValueKey(authVM.user!.profileImageUrl),
                                   ),
                                 )
                               : const Icon(
@@ -636,7 +637,7 @@ class _SmartHomePageState extends State<SmartHomePage>
           ),
           Switch(
             value: value,
-            activeColor: activeColor ?? iconColor,
+            activeThumbColor: activeColor ?? iconColor,
             onChanged: onChanged,
           ),
         ],

@@ -17,14 +17,16 @@ class CropSelectionPage extends StatefulWidget {
 class _CropSelectionPageState extends State<CropSelectionPage> {
   late String userId;
   late Set<String> pendingSelectedCropNames;
-  
+
   @override
   void initState() {
     super.initState();
     userId = context.read<AuthViewModel>().user!.id;
     // Initialize pending selections with current selections using crop names
     final currentSelections = context.read<CropViewModel>().selectedCrops;
-    pendingSelectedCropNames = currentSelections.map((crop) => crop.name).toSet();
+    pendingSelectedCropNames = currentSelections
+        .map((crop) => crop.name)
+        .toSet();
   }
 
   void _toggleCropSelection(Crop crop) {
@@ -42,7 +44,6 @@ class _CropSelectionPageState extends State<CropSelectionPage> {
   }
 
   void _onSelectCrops() {
-    
     final networkViewModel = context.read<NetworkViewModel>();
 
     if (!networkViewModel.isConnected) {
@@ -54,26 +55,33 @@ class _CropSelectionPageState extends State<CropSelectionPage> {
       final cropViewModel = context.read<CropViewModel>();
       final availableCrops = cropViewModel.availableCrops;
       final currentSelections = cropViewModel.selectedCrops;
-      
+
       // Find crops to add and remove based on names
-      final cropsToAdd = availableCrops.where((crop) => 
-        pendingSelectedCropNames.contains(crop.name) && 
-        !currentSelections.any((selected) => selected.name == crop.name)
-      ).toList();
-      
-      final cropsToRemove = currentSelections.where((crop) => 
-        !pendingSelectedCropNames.contains(crop.name)
-      ).toList();
-      
+      final cropsToAdd = availableCrops
+          .where(
+            (crop) =>
+                pendingSelectedCropNames.contains(crop.name) &&
+                !currentSelections.any(
+                  (selected) => selected.name == crop.name,
+                ),
+          )
+          .toList();
+
+      final cropsToRemove = currentSelections
+          .where((crop) => !pendingSelectedCropNames.contains(crop.name))
+          .toList();
+
       // Apply changes
       for (final crop in cropsToRemove) {
         await cropViewModel.removeCrop(userId, crop);
       }
-      
+
       for (final crop in cropsToAdd) {
         await cropViewModel.addCrop(userId, crop);
       }
-      
+
+      if (!mounted) return;
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Row(
@@ -90,6 +98,7 @@ class _CropSelectionPageState extends State<CropSelectionPage> {
       );
 
       Future.delayed(const Duration(milliseconds: 800), () {
+        if (!mounted) return;
         Navigator.pop(context);
       });
     });
@@ -115,10 +124,10 @@ class _CropSelectionPageState extends State<CropSelectionPage> {
       body: Consumer<CropViewModel>(
         builder: (context, cropViewModel, child) {
           final availableCrops = cropViewModel.availableCrops;
-          final pendingSelectedCrops = availableCrops.where((crop) => 
-            pendingSelectedCropNames.contains(crop.name)
-          ).toList();
-          
+          final pendingSelectedCrops = availableCrops
+              .where((crop) => pendingSelectedCropNames.contains(crop.name))
+              .toList();
+
           return SingleChildScrollView(
             padding: const EdgeInsets.all(16),
             child: Column(
@@ -159,15 +168,13 @@ class _CropSelectionPageState extends State<CropSelectionPage> {
                               label: Text(crop.name),
                               deleteIcon: Icon(Icons.close, size: 18),
                               onDeleted: () => _toggleCropSelection(crop),
-                              backgroundColor: Theme.of(context)
-                                  .colorScheme
-                                  .primary
-                                  .withValues(alpha: .1),
+                              backgroundColor: Theme.of(
+                                context,
+                              ).colorScheme.primary.withValues(alpha: .1),
                               side: BorderSide(
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .primary
-                                    .withValues(alpha: .3),
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.primary.withValues(alpha: .3),
                               ),
                             );
                           }).toList(),
@@ -214,16 +221,14 @@ class _CropSelectionPageState extends State<CropSelectionPage> {
                         childAspectRatio: 1.1,
                         children: availableCrops.map((crop) {
                           final isSelected = _isPendingSelected(crop);
-                          
+
                           return GestureDetector(
                             onTap: () => _toggleCropSelection(crop),
                             child: Container(
                               decoration: BoxDecoration(
                                 color: isSelected
-                                    ? Theme.of(context)
-                                        .colorScheme
-                                        .primary
-                                        .withValues(alpha: .1)
+                                    ? Theme.of(context).colorScheme.primary
+                                          .withValues(alpha: .1)
                                     : Colors.grey.shade50,
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
@@ -242,7 +247,9 @@ class _CropSelectionPageState extends State<CropSelectionPage> {
                                         crop.iconData,
                                         size: 40,
                                         color: isSelected
-                                            ? Theme.of(context).colorScheme.primary
+                                            ? Theme.of(
+                                                context,
+                                              ).colorScheme.primary
                                             : Colors.grey.shade600,
                                       ),
                                       if (isSelected)
@@ -271,7 +278,9 @@ class _CropSelectionPageState extends State<CropSelectionPage> {
                                       fontSize: 14,
                                       fontWeight: FontWeight.w500,
                                       color: isSelected
-                                          ? Theme.of(context).colorScheme.primary
+                                          ? Theme.of(
+                                              context,
+                                            ).colorScheme.primary
                                           : Colors.grey.shade700,
                                     ),
                                     textAlign: TextAlign.center,
@@ -366,10 +375,9 @@ class _CropSelectionPageState extends State<CropSelectionPage> {
                               gradient: LinearGradient(
                                 colors: [
                                   Theme.of(context).colorScheme.primary,
-                                  Theme.of(context)
-                                      .colorScheme
-                                      .primary
-                                      .withValues(alpha: .8),
+                                  Theme.of(
+                                    context,
+                                  ).colorScheme.primary.withValues(alpha: .8),
                                 ],
                                 begin: Alignment.topLeft,
                                 end: Alignment.bottomRight,
@@ -377,10 +385,9 @@ class _CropSelectionPageState extends State<CropSelectionPage> {
                               borderRadius: BorderRadius.circular(12),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .primary
-                                      .withValues(alpha: .3),
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.primary.withValues(alpha: .3),
                                   blurRadius: 8,
                                   offset: Offset(0, 4),
                                 ),

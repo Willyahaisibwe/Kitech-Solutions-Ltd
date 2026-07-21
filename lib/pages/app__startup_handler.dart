@@ -28,6 +28,8 @@ class _AppStartupHandlerState extends State<AppStartupHandler> {
       // Check if user wants to be remembered and attempt auto-login
       UserModel? user = await _authViewModel!.checkRememberMe();
 
+      if (!mounted) return;
+
       if (user != null) {
         // Auto-login successful, navigate based on how many services the user owns
         navigateAfterAuth(context, user);
@@ -37,13 +39,16 @@ class _AppStartupHandlerState extends State<AppStartupHandler> {
       }
     } catch (e) {
       // Auto-login failed, go to login page
-      print('Auto-login failed: ${e.toString()}');
+      debugPrint('Auto-login failed: ${e.toString()}');
+      if (!mounted) return;
       Navigator.pushReplacementNamed(context, '/login');
     }
 
-    setState(() {
-      _isChecking = false;
-    });
+    if (mounted) {
+      setState(() {
+        _isChecking = false;
+      });
+    }
   }
 
   @override

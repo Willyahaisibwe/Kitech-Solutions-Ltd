@@ -79,7 +79,9 @@ class _TemperatureSettingsPageState extends State<TemperatureSettingsPage>
         ),
       );
       Future.delayed(const Duration(milliseconds: 800), () {
-        Navigator.pop(context);
+        if (mounted) {
+          Navigator.pop(context);
+        }
       });
     });
   }

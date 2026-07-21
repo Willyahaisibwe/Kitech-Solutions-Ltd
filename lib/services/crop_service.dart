@@ -1,8 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 import 'package:smart_crop_dryer/models/crop.dart';
 
 class CropService {
-
   CollectionReference<Map<String, dynamic>> _getUserSelectedCropsCollection(
     String userId,
   ) {
@@ -15,9 +15,9 @@ class CropService {
   Future<void> addSelectedCrop(String userId, Crop crop) async {
     try {
       await _getUserSelectedCropsCollection(userId).add(crop.toMap());
-      print('✅ Crop added for user $userId: ${crop.name}');
+      debugPrint('✅ Crop added for user $userId: ${crop.name}');
     } catch (e) {
-      print('❌ Error adding crop for user $userId: $e');
+      debugPrint('❌ Error adding crop for user $userId: $e');
       throw Exception('Failed to add crop');
     }
   }
@@ -25,9 +25,9 @@ class CropService {
   Future<void> deleteSelectedCrop(String userId, String cropId) async {
     try {
       await _getUserSelectedCropsCollection(userId).doc(cropId).delete();
-      print('✅ Crop $cropId deleted for user $userId');
+      debugPrint('✅ Crop $cropId deleted for user $userId');
     } catch (e) {
-      print('❌ Error deleting crop $cropId for user $userId: $e');
+      debugPrint('❌ Error deleting crop $cropId for user $userId: $e');
       throw Exception('Failed to delete crop');
     }
   }
@@ -35,16 +35,16 @@ class CropService {
   Future<Crop?> getSelectedCropById(String userId, String cropId) async {
     try {
       final docSnapshot = await _getUserSelectedCropsCollection(
-        userId
+        userId,
       ).doc(cropId).get();
       if (docSnapshot.exists && docSnapshot.data() != null) {
         return Crop.fromMap(docSnapshot.data()!, docSnapshot.id);
       } else {
-        print('⚠️ Crop $cropId does not exist for user $userId');
+        debugPrint('⚠️ Crop $cropId does not exist for user $userId');
         return null;
       }
     } catch (e) {
-      print('❌ Error getting crop $cropId for user $userId: $e');
+      debugPrint('❌ Error getting crop $cropId for user $userId: $e');
       return null;
     }
   }
@@ -57,14 +57,14 @@ class CropService {
         try {
           crops.add(Crop.fromMap(doc.data(), doc.id));
         } catch (e) {
-          print(
+          debugPrint(
             '⚠️ Warning: Could not parse crop data for document ${doc.id}: $e',
           );
         }
       }
       return crops;
     } catch (e) {
-      print('❌ Error getting selected crops for user $userId: $e');
+      debugPrint('❌ Error getting selected crops for user $userId: $e');
       return [];
     }
   }
@@ -78,7 +78,7 @@ class CropService {
             try {
               crops.add(Crop.fromMap(doc.data(), doc.id));
             } catch (e) {
-              print(
+              debugPrint(
                 '⚠️ Warning: Could not parse crop data for document ${doc.id}: $e',
               );
             }
@@ -86,7 +86,9 @@ class CropService {
           return crops;
         })
         .handleError((error) {
-          print('❌ Error listening to selected crops for user $userId: $error');
+          debugPrint(
+            '❌ Error listening to selected crops for user $userId: $error',
+          );
           return <Crop>[];
         });
   }

@@ -42,7 +42,7 @@ class SmartHomeSettingsViewModel extends ChangeNotifier {
     try {
       await settingsService.updateSettings(updated);
     } catch (e) {
-      print('❌ Error updating SmartHome settings: $e');
+      // Error updating SmartHome settings
     } finally {
       _isLoading = false;
       notifyListeners();

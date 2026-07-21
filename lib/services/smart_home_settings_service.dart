@@ -28,9 +28,8 @@ class SmartHomeSettingsService {
   Future<void> updateSettings(SmartHomeSettings settings) async {
     try {
       await ref!.update(settings.toMap());
-      print('✅ SmartHome settings updated: ${settings.toMap()}');
     } catch (e) {
-      print('❌ Error updating SmartHome settings: $e');
+      // Error updating SmartHome settings
       throw Exception('Failed to update SmartHome settings');
     }
   }
@@ -49,7 +48,6 @@ class SmartHomeSettingsService {
           );
         })
         .handleError((error) {
-          print('❌ Error listening to SmartHome settings: $error');
           return SmartHomeSettings(
             alarmEnabled: false,
             autoLight: false,

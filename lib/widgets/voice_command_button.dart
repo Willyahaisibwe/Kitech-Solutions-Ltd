@@ -32,7 +32,6 @@ class _VoiceCommandButtonState extends State<VoiceCommandButton> {
 
   Future<void> _startListening() async {
     final micStatus = await Permission.microphone.request();
-    print('🎤 Mic permission status: $micStatus');
 
     if (!micStatus.isGranted) {
       if (mounted) {
@@ -50,20 +49,14 @@ class _VoiceCommandButtonState extends State<VoiceCommandButton> {
 
     bool available = await _speech.initialize(
       onStatus: (status) {
-        print('🎤 Speech status: $status');
         if (status == 'done' || status == 'notListening') {
           setState(() => _isListening = false);
         }
       },
       onError: (error) {
-        print(
-          '🎤 Speech error: ${error.errorMsg}, permanent: ${error.permanent}',
-        );
         setState(() => _isListening = false);
       },
     );
-
-    print('🎤 Speech available: $available');
 
     if (available) {
       setState(() {
@@ -73,9 +66,6 @@ class _VoiceCommandButtonState extends State<VoiceCommandButton> {
 
       _speech.listen(
         onResult: (result) {
-          print(
-            '🎤 Recognized so far: ${result.recognizedWords}, final: ${result.finalResult}',
-          );
           setState(() {
             _lastWords = result.recognizedWords;
           });
@@ -84,8 +74,10 @@ class _VoiceCommandButtonState extends State<VoiceCommandButton> {
             _handleFinalResult(_lastWords);
           }
         },
-        listenFor: const Duration(seconds: 15),
-        pauseFor: const Duration(seconds: 5),
+        listenOptions: stt.SpeechListenOptions(
+          listenFor: const Duration(seconds: 15),
+          pauseFor: const Duration(seconds: 5),
+        ),
       );
     } else {
       if (mounted) {

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
-import 'dart:io';
+import 'dart:typed_data';
 import 'package:smart_crop_dryer/view_models/auth_view_model.dart';
 
 class EditUserInfoPage extends StatefulWidget {
@@ -17,21 +17,28 @@ class _EditUserInfoPageState extends State<EditUserInfoPage> {
   late TextEditingController _nameController;
   late TextEditingController _emailController;
   late TextEditingController _farmLocationController;
-  
+
   AuthViewModel? userViewModel;
-  File? _selectedImage;
+  Uint8List? _selectedImage;
   final ImagePicker _imagePicker = ImagePicker();
   bool _isLoading = false;
+  bool _removeProfilePhoto = false;
 
   @override
   void initState() {
     super.initState();
     userViewModel = context.read<AuthViewModel>();
-    
+
     // Initialize controllers with current user data
-    _nameController = TextEditingController(text: userViewModel?.user?.name ?? '');
-    _emailController = TextEditingController(text: userViewModel?.user?.email ?? '');
-    _farmLocationController = TextEditingController(text: userViewModel?.user?.farmLocation ?? '');
+    _nameController = TextEditingController(
+      text: userViewModel?.user?.name ?? '',
+    );
+    _emailController = TextEditingController(
+      text: userViewModel?.user?.email ?? '',
+    );
+    _farmLocationController = TextEditingController(
+      text: userViewModel?.user?.farmLocation ?? '',
+    );
   }
 
   @override
@@ -50,10 +57,12 @@ class _EditUserInfoPageState extends State<EditUserInfoPage> {
         maxHeight: 800,
         imageQuality: 85,
       );
-      
+
       if (image != null) {
+        final bytes = await image.readAsBytes();
         setState(() {
-          _selectedImage = File(image.path);
+          _selectedImage = bytes;
+          _removeProfilePhoto = false;
         });
       }
     } catch (e) {
@@ -69,10 +78,12 @@ class _EditUserInfoPageState extends State<EditUserInfoPage> {
         maxHeight: 800,
         imageQuality: 85,
       );
-      
+
       if (image != null) {
+        final bytes = await image.readAsBytes();
         setState(() {
-          _selectedImage = File(image.path);
+          _selectedImage = bytes;
+          _removeProfilePhoto = false;
         });
       }
     } catch (e) {
@@ -154,6 +165,7 @@ class _EditUserInfoPageState extends State<EditUserInfoPage> {
                           Navigator.pop(context);
                           setState(() {
                             _selectedImage = null;
+                            _removeProfilePhoto = true;
                           });
                         },
                       ),
@@ -188,11 +200,7 @@ class _EditUserInfoPageState extends State<EditUserInfoPage> {
         ),
         child: Column(
           children: [
-            Icon(
-              icon,
-              size: 24,
-              color: iconColor ?? Colors.grey.shade600,
-            ),
+            Icon(icon, size: 24, color: iconColor ?? Colors.grey.shade600),
             SizedBox(height: 8),
             Text(
               label,
@@ -216,27 +224,46 @@ class _EditUserInfoPageState extends State<EditUserInfoPage> {
     });
 
     try {
+      String? profileImageUrl = userViewModel?.user?.profileImageUrl;
+
+      if (_selectedImage != null) {
+        profileImageUrl = await userViewModel!.authService
+            .uploadProfileImageToCloudinary(
+              imageBytes: _selectedImage!,
+              userId: userViewModel!.user!.id,
+            );
+      } else if (_removeProfilePhoto) {
+        profileImageUrl = null;
+      }
+
       // Create updated user model
       final updatedUser = userViewModel!.user!.copyWith(
         name: _nameController.text.trim(),
         email: _emailController.text.trim(),
         farmLocation: _farmLocationController.text.trim(),
+        profileImageUrl: profileImageUrl,
         updatedAt: DateTime.now(),
       );
 
       await userViewModel?.updateUserData(updatedUser);
-      
+      userViewModel?.setUser(updatedUser);
+
+      if (!mounted) return;
+
       // Show success message
       _showSuccessSnackBar('Profile updated successfully!');
-      
+
       // Navigate back
       Navigator.pop(context);
     } catch (e) {
+      if (!mounted) return;
       _showErrorSnackBar('Failed to update profile: ${e.toString()}');
     } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
@@ -289,10 +316,7 @@ class _EditUserInfoPageState extends State<EditUserInfoPage> {
               color: Colors.grey.shade100,
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(
-              Icons.arrow_back,
-              color: Colors.grey.shade700,
-            ),
+            child: Icon(Icons.arrow_back, color: Colors.grey.shade700),
           ),
           onPressed: () => Navigator.pop(context),
         ),
@@ -397,22 +421,39 @@ class _EditUserInfoPageState extends State<EditUserInfoPage> {
                   shape: BoxShape.circle,
                   gradient: LinearGradient(
                     colors: [
-                      Theme.of(context).colorScheme.primary.withValues(alpha: .1),
-                      Theme.of(context).colorScheme.primary.withValues(alpha: .05),
+                      Theme.of(
+                        context,
+                      ).colorScheme.primary.withValues(alpha: .1),
+                      Theme.of(
+                        context,
+                      ).colorScheme.primary.withValues(alpha: .05),
                     ],
                   ),
-                  border: Border.all(
-                    color: Colors.grey.shade200,
-                    width: 2,
-                  ),
+                  border: Border.all(color: Colors.grey.shade200, width: 2),
                 ),
                 child: _selectedImage != null
                     ? ClipOval(
-                        child: Image.file(
+                        child: Image.memory(
                           _selectedImage!,
                           fit: BoxFit.cover,
                           width: 120,
                           height: 120,
+                        ),
+                      )
+                    : userViewModel?.user?.profileImageUrl != null
+                    ? ClipOval(
+                        child: Image.network(
+                          userViewModel!.user!.profileImageUrl!,
+                          fit: BoxFit.cover,
+                          width: 120,
+                          height: 120,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Icon(
+                              Icons.person,
+                              size: 60,
+                              color: Theme.of(context).colorScheme.primary,
+                            );
+                          },
                         ),
                       )
                     : Icon(
@@ -453,10 +494,7 @@ class _EditUserInfoPageState extends State<EditUserInfoPage> {
           SizedBox(height: 12),
           Text(
             "Tap the camera icon to update",
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.grey.shade600,
-            ),
+            style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
           ),
         ],
       ),
@@ -530,7 +568,9 @@ class _EditUserInfoPageState extends State<EditUserInfoPage> {
               if (value == null || value.trim().isEmpty) {
                 return 'Please enter your email address';
               }
-              if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value.trim())) {
+              if (!RegExp(
+                r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+              ).hasMatch(value.trim())) {
                 return 'Please enter a valid email address';
               }
               return null;
@@ -611,7 +651,7 @@ class _EditUserInfoPageState extends State<EditUserInfoPage> {
           SizedBox(height: 16),
           _buildReadOnlyField(
             label: "Member Since",
-            value: userViewModel?.user?.createdAt != null 
+            value: userViewModel?.user?.createdAt != null
                 ? "${userViewModel!.user!.createdAt.day}/${userViewModel!.user!.createdAt.month}/${userViewModel!.user!.createdAt.year}"
                 : "Unknown",
             icon: Icons.calendar_today_outlined,
@@ -644,21 +684,11 @@ class _EditUserInfoPageState extends State<EditUserInfoPage> {
           controller: controller,
           keyboardType: keyboardType,
           validator: validator,
-          style: TextStyle(
-            fontSize: 16,
-            color: Colors.grey.shade800,
-          ),
+          style: TextStyle(fontSize: 16, color: Colors.grey.shade800),
           decoration: InputDecoration(
-            prefixIcon: Icon(
-              icon,
-              color: Colors.grey.shade500,
-              size: 20,
-            ),
+            prefixIcon: Icon(icon, color: Colors.grey.shade500, size: 20),
             hintText: "Enter $label",
-            hintStyle: TextStyle(
-              color: Colors.grey.shade400,
-              fontSize: 16,
-            ),
+            hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 16),
             filled: true,
             fillColor: Colors.grey.shade50,
             border: OutlineInputBorder(
@@ -718,11 +748,7 @@ class _EditUserInfoPageState extends State<EditUserInfoPage> {
           ),
           child: Row(
             children: [
-              Icon(
-                icon,
-                color: Colors.grey.shade500,
-                size: 20,
-              ),
+              Icon(icon, color: Colors.grey.shade500, size: 20),
               SizedBox(width: 12),
               Expanded(
                 child: Text(
@@ -763,7 +789,9 @@ class _EditUserInfoPageState extends State<EditUserInfoPage> {
               ? []
               : [
                   BoxShadow(
-                    color: Theme.of(context).colorScheme.primary.withValues(alpha: .3),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.primary.withValues(alpha: .3),
                     blurRadius: 8,
                     offset: Offset(0, 4),
                   ),

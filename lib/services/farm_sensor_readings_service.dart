@@ -20,12 +20,11 @@ class FarmSensorReadingsService {
   Stream<FarmSensorReadings?> getSensorReadingsStream() {
     return ref!.onValue
         .handleError((error) {
-          print('❌ Farm sensor stream error: $error');
+          // Farm sensor stream error
         })
         .map((event) {
           try {
             if (!event.snapshot.exists || event.snapshot.value == null) {
-              print('⚠️ No data found at farm sensors node');
               return null;
             }
 
@@ -33,16 +32,13 @@ class FarmSensorReadingsService {
 
             if (rawData is Map) {
               final json = Map<String, dynamic>.from(rawData);
-              print('🔄 Attempting to create FarmSensorReadings from JSON...');
               final readings = FarmSensorReadings.fromJson(json);
-              print('✅ Successfully created FarmSensorReadings');
               return readings;
             } else {
-              print('❌ Unexpected data type: ${rawData.runtimeType}');
               return null;
             }
           } catch (e) {
-            print('❌ Exception: $e');
+            // Exception occurred
             return null;
           }
         });
@@ -61,7 +57,7 @@ class FarmSensorReadingsService {
 
       return FarmSensorReadings.fromJson(json);
     } catch (e) {
-      print('❌ Error during one-time fetch: $e');
+      // Error during one-time fetch
       return null;
     }
   }

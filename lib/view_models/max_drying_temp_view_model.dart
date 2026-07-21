@@ -4,7 +4,6 @@ import 'package:smart_crop_dryer/services/settings_service.dart';
 import 'dart:async';
 
 class MaxDryingTempViewModel extends ChangeNotifier {
-  
   late MaxDryingTemp _maxDryingTemp;
 
   MaxDryingTemp get maxDryingTemp => _maxDryingTemp;
@@ -23,25 +22,20 @@ class MaxDryingTempViewModel extends ChangeNotifier {
   }
 
   void _startListeningToThreshold() {
-    _thresholdSubscription = settingsService.listenForMaxDryingTempSetting().listen(
-      (newMaxDryingTemp) {
-        _maxDryingTemp = newMaxDryingTemp;
+    _thresholdSubscription = settingsService
+        .listenForMaxDryingTempSetting()
+        .listen(
+          (newMaxDryingTemp) {
+            _maxDryingTemp = newMaxDryingTemp;
 
-        notifyListeners();
-        print(
-          'ViewModel updated with new threshold from DB: ${_maxDryingTemp.value}',
+            notifyListeners();
+          },
+          onError: (error) {
+            _maxDryingTemp = MaxDryingTemp(value: 50.0);
+            notifyListeners();
+          },
+          onDone: () {},
         );
-      },
-      onError: (error) {
-        print('❌ ViewModel Error listening to threshold: $error');
-
-        _maxDryingTemp = MaxDryingTemp(value: 50.0);
-        notifyListeners();
-      },
-      onDone: () {
-        print('Stream for threshold is closed.');
-      },
-    );
   }
 
   void setMaxDryingTemp(double value) {
@@ -50,14 +44,8 @@ class MaxDryingTempViewModel extends ChangeNotifier {
 
     settingsService
         .updateMaxDryingTempSetting(_maxDryingTemp)
-        .then((_) {
-          print('✅ ViewModel: Setting updated in Firebase.');
-        })
-        .catchError((error) {
-          print(
-            '❌ ViewModel Error updating max drying temp in Firebase: $error',
-          );
-        });
+        .then((_) {})
+        .catchError((error) {});
   }
 
   @override

@@ -31,7 +31,6 @@ class HistoricalReadingViewModel extends ChangeNotifier {
     required double Function() getDesiredTemp,
   }) {
     if (_savingTimer?.isActive ?? false) {
-      print('⚠️ Periodic saving already active');
       return;
     }
 
@@ -52,7 +51,6 @@ class HistoricalReadingViewModel extends ChangeNotifier {
     });
 
     notifyListeners();
-    print('▶️ Started periodic saving (every 3 minutes)');
   }
 
   /// Stop periodic saving
@@ -60,7 +58,6 @@ class HistoricalReadingViewModel extends ChangeNotifier {
     _savingTimer?.cancel();
     _savingTimer = null;
     notifyListeners();
-    print('⏸️ Stopped periodic saving');
   }
 
   /// Save a reading to Firestore
@@ -82,10 +79,8 @@ class HistoricalReadingViewModel extends ChangeNotifier {
       // Add to local list
       _readings.add(reading);
       notifyListeners();
-
-      print('💾 Saved reading: ${reading.temperature}°C, ${reading.humidity}%');
     } catch (e) {
-      print('❌ Failed to save reading: $e');
+      // Failed to save reading
     }
   }
 
@@ -96,9 +91,8 @@ class HistoricalReadingViewModel extends ChangeNotifier {
 
     try {
       _readings = await historyService.getReadingsForToday();
-      print('📊 Loaded ${_readings.length} readings for today');
     } catch (e) {
-      print('❌ Error loading readings: $e');
+      // Error loading readings
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -112,9 +106,8 @@ class HistoricalReadingViewModel extends ChangeNotifier {
 
     try {
       _readings = await historyService.getReadingsForLastHours(hours);
-      print('📊 Loaded ${_readings.length} readings for last $hours hours');
     } catch (e) {
-      print('❌ Error loading readings: $e');
+      // Error loading readings
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -132,9 +125,8 @@ class HistoricalReadingViewModel extends ChangeNotifier {
         endDate: endDate,
         limit: limit,
       );
-      print('📊 Loaded ${_readings.length} readings');
     } catch (e) {
-      print('❌ Error loading readings: $e');
+      // Error loading readings
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -146,9 +138,6 @@ class HistoricalReadingViewModel extends ChangeNotifier {
     _savingTimer?.cancel();
     super.dispose();
   }
-
-
-
 
   ///MOCK DATA FOR TESTING PURPOSES ONLY
 
@@ -223,7 +212,6 @@ class HistoricalReadingViewModel extends ChangeNotifier {
     // If you generated it chronologically, no need to reverse.
 
     _isLoading = false;
-    print('📊 Loaded ${_readings.length} mock readings for testing.');
     notifyListeners();
   }
 }

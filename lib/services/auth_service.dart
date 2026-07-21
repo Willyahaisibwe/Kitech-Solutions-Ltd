@@ -1,11 +1,13 @@
-import 'package:firebase_auth/firebase_auth.dart';
+import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:flutter/foundation.dart';
+import 'package:http/http.dart' as http;
+import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:smart_crop_dryer/models/user_model.dart';
-import 'dart:io';
-import 'package:image_picker/image_picker.dart';
-import 'package:firebase_storage/firebase_storage.dart';
+import 'package:smart_crop_dryer/services/cloudinary_config.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -20,7 +22,77 @@ class AuthService {
 
   Stream<User?> get authStateChanges => _auth.authStateChanges();
 
-  /// Pick an image from gallery, upload it to Firebase Storage,
+  static Future<http.MultipartRequest> createCloudinaryUploadRequest(
+    Uint8List imageBytes,
+    String userId,
+  ) async {
+    final request = http.MultipartRequest(
+      'POST',
+      Uri.parse(CloudinaryConfig.uploadUrl),
+    );
+
+    // No public_id: the preset is unsigned, and unsigned presets can't set
+    // overwrite=true, so we let Cloudinary auto-generate a unique id per
+    // upload instead of trying to overwrite the same asset each time.
+    request.fields['upload_preset'] = CloudinaryConfig.uploadPreset;
+    request.fields['folder'] = 'profile_photos';
+
+    final timestamp = DateTime.now().millisecondsSinceEpoch;
+    request.files.add(
+      http.MultipartFile.fromBytes(
+        'file',
+        imageBytes,
+        filename: '${userId}_$timestamp.jpg',
+      ),
+    );
+
+    return request;
+  }
+
+  Future<String?> uploadProfileImageToCloudinary({
+    required Uint8List imageBytes,
+    required String userId,
+  }) async {
+    final user = _auth.currentUser;
+    if (user == null) {
+      throw AuthException('You must be logged in to update your photo.');
+    }
+
+    try {
+      final request = await createCloudinaryUploadRequest(imageBytes, userId);
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
+
+      if (response.statusCode < 200 || response.statusCode >= 300) {
+        throw UserDataException(
+          'Cloudinary upload failed with status ${response.statusCode}: ${response.body}',
+        );
+      }
+
+      final decoded = jsonDecode(response.body) as Map<String, dynamic>;
+      final uploadedUrl = decoded['secure_url'] as String?;
+
+      if (uploadedUrl == null || uploadedUrl.isEmpty) {
+        throw UserDataException('Cloudinary did not return a valid image URL.');
+      }
+
+      // No cache-busting needed: every upload gets a distinct URL now,
+      // since we no longer reuse the same public_id.
+      await _firestore.collection('Users').doc(userId).update({
+        'profileImageUrl': uploadedUrl,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+
+      return uploadedUrl;
+    } catch (e) {
+      if (e is UserDataException) {
+        rethrow;
+      }
+      throw UserDataException('Failed to upload profile photo: $e');
+    }
+  }
+
+  /// Pick an image from gallery, upload it to Cloudinary,
   /// and update the user's profileImageUrl in Firestore.
   Future<String?> pickAndUploadProfileImage() async {
     final user = _auth.currentUser;
@@ -37,26 +109,14 @@ class AuthService {
       );
 
       if (pickedFile == null) {
-        // User cancelled picking
         return null;
       }
 
-      final file = File(pickedFile.path);
-
-      final storageRef = FirebaseStorage.instance
-          .ref()
-          .child('profile_images')
-          .child('${user.uid}.jpg');
-
-      await storageRef.putFile(file);
-
-      final downloadUrl = await storageRef.getDownloadURL();
-
-      await _firestore.collection('Users').doc(user.uid).update({
-        'profileImageUrl': downloadUrl,
-      });
-
-      return downloadUrl;
+      final bytes = await pickedFile.readAsBytes();
+      return uploadProfileImageToCloudinary(
+        imageBytes: bytes,
+        userId: user.uid,
+      );
     } catch (e) {
       throw UserDataException('Failed to upload profile photo: $e');
     }
@@ -103,7 +163,7 @@ class AuthService {
         }
       }
     } catch (e) {
-      print('Error during auto-login: ${e.toString()}');
+      debugPrint('Error during auto-login: ${e.toString()}');
       await clearRememberMe();
     }
     return null;
@@ -205,7 +265,9 @@ class AuthService {
     } on DeviceException {
       rethrow;
     } catch (e) {
-      throw AuthException('An unexpected error occurred during registration');
+      throw AuthException(
+        'An unexpected error occurred during registration: $e',
+      );
     }
     return null;
   }
@@ -306,7 +368,7 @@ class AuthService {
               );
               validDevices.add(device);
             } catch (e) {
-              print(
+              debugPrint(
                 '⚠️ Device ${device.deviceId} (${device.type}) is no longer '
                 'valid for this user, removing from account: $e',
               );
@@ -325,7 +387,7 @@ class AuthService {
           return userModel.copyWith(devices: validDevices);
         } catch (e) {
           await signOut(clearRememberedCredentials: false);
-          throw e;
+          rethrow;
         }
       }
     } on FirebaseAuthException catch (e) {
@@ -333,7 +395,7 @@ class AuthService {
     } on DeviceException {
       rethrow;
     } catch (e) {
-      throw AuthException('An unexpected error occurred during sign in');
+      throw AuthException('An unexpected error occurred during sign in: $e');
     }
     return null;
   }

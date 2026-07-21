@@ -20,13 +20,9 @@ class HistoricalReadingService {
   /// Save a single reading to Firestore
   Future<void> saveReading(HistoricalReading reading) async {
     try {
-      await ref!
-          .doc(reading.timestamp.toString())
-          .set(reading.toMap());
-      
-      print('✅ Reading saved: ${DateTime.fromMillisecondsSinceEpoch(reading.timestamp)}');
+      await ref!.doc(reading.timestamp.toString()).set(reading.toMap());
     } catch (e) {
-      print('❌ Error saving reading: $e');
+      // Error saving reading
       throw Exception('Failed to save reading');
     }
   }
@@ -68,10 +64,13 @@ class HistoricalReadingService {
       final snapshot = await query.get();
 
       return snapshot.docs
-          .map((doc) => HistoricalReading.fromMap(doc.data() as Map<String, dynamic>))
+          .map(
+            (doc) =>
+                HistoricalReading.fromMap(doc.data() as Map<String, dynamic>),
+          )
           .toList();
     } catch (e) {
-      print('❌ Error fetching readings: $e');
+      // Error fetching readings
       return [];
     }
   }
@@ -80,7 +79,7 @@ class HistoricalReadingService {
   Future<List<HistoricalReading>> getReadingsForLastHours(int hours) async {
     final now = DateTime.now();
     final startTime = now.subtract(Duration(hours: hours));
-    
+
     return getReadings(
       startDate: startTime.millisecondsSinceEpoch,
       endDate: now.millisecondsSinceEpoch,
@@ -88,10 +87,7 @@ class HistoricalReadingService {
   }
 
   /// Stream readings in real-time
-  Stream<List<HistoricalReading>> streamReadings({
-    int? startDate,
-    int? limit,
-  }) {
+  Stream<List<HistoricalReading>> streamReadings({int? startDate, int? limit}) {
     Query query = ref!;
 
     if (startDate != null) {
@@ -106,7 +102,10 @@ class HistoricalReadingService {
 
     return query.snapshots().map((snapshot) {
       return snapshot.docs
-          .map((doc) => HistoricalReading.fromMap(doc.data() as Map<String, dynamic>))
+          .map(
+            (doc) =>
+                HistoricalReading.fromMap(doc.data() as Map<String, dynamic>),
+          )
           .toList();
     });
   }

@@ -20,9 +20,8 @@ class SmartHomeControlService {
     try {
       var controlData = control.toMap();
       await ref!.update(controlData);
-      print('✅ SmartHome control updated: $controlData');
     } catch (e) {
-      print('❌ Error updating SmartHome control state: $e');
+      // Error updating SmartHome control state
       throw Exception('Failed to update SmartHome control state');
     }
   }
@@ -35,9 +34,6 @@ class SmartHomeControlService {
           if (value != null && value is Map<dynamic, dynamic>) {
             return SmartHomeControl.fromMap(Map<String, dynamic>.from(value));
           } else {
-            print(
-              '⚠️ Warning: SmartHome control data is null. Using default state.',
-            );
             return SmartHomeControl(
               alarm: false,
               fan: false,
@@ -47,7 +43,6 @@ class SmartHomeControlService {
           }
         })
         .handleError((error) {
-          print('❌ Error listening to SmartHome control state: $error');
           return SmartHomeControl(
             alarm: false,
             fan: false,

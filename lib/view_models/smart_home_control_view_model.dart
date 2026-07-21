@@ -40,7 +40,7 @@ class SmartHomeControlViewModel extends ChangeNotifier {
     try {
       await controlService.updateControlState(updated);
     } catch (e) {
-      print('❌ Error updating SmartHome control: $e');
+      // Error updating SmartHome control
     } finally {
       _isLoading = false;
       notifyListeners();

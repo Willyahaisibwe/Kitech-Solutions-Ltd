@@ -22,12 +22,8 @@ class FarmControlService {
       var controlData = control.toMap();
 
       await ref!.update(controlData);
-
-      print(
-        '✅ Farm control updated: PumpState: ${control.pumpState}, AutoMode: ${control.autoMode}',
-      );
     } catch (e) {
-      print('❌ Error updating farm control state: $e');
+      // Error updating farm control state
       throw Exception('Failed to update farm control state');
     }
   }
@@ -40,14 +36,10 @@ class FarmControlService {
           if (value != null && value is Map<dynamic, dynamic>) {
             return FarmControl.fromMap(Map<String, dynamic>.from(value));
           } else {
-            print(
-              '⚠️ Warning: Farm control data is null or not a map. Using default state.',
-            );
             return FarmControl(pumpState: false, autoMode: false);
           }
         })
         .handleError((error) {
-          print('❌ Error listening to farm control state: $error');
           return FarmControl(pumpState: false, autoMode: false);
         });
   }

@@ -21,12 +21,11 @@ class SensorReadingsService {
   Stream<SensorReadings?> getSensorReadingsStream() {
     return ref!.onValue
         .handleError((error) {
-          print('❌ Stream error: $error');
+          // Stream error
         })
         .map((event) {
           try {
             if (!event.snapshot.exists || event.snapshot.value == null) {
-              print('⚠️ No data found at sensors node');
               return null;
             }
 
@@ -41,21 +40,17 @@ class SensorReadingsService {
                   .where((item) => item != null)
                   .toList();
               if (nonNullItems.isEmpty) {
-                print('❌ List is empty or contains only null values');
                 return null;
               }
               json = Map<String, dynamic>.from(nonNullItems.first as Map);
             } else {
-              print('❌ Unexpected data type: ${rawData.runtimeType}');
               return null;
             }
 
-            print('🔄 Attempting to create SensorReadings from JSON...');
             final sensorReadings = SensorReadings.fromJson(json);
-            print('✅ Successfully created SensorReadings');
             return sensorReadings;
           } catch (e) {
-            print('❌ Exception: $e');
+            // Exception occurred
             return null;
           }
         });
@@ -74,7 +69,7 @@ class SensorReadingsService {
 
       return SensorReadings.fromJson(json);
     } catch (e) {
-      print('❌ Error during one-time fetch: $e');
+      // Error during one-time fetch
       return null;
     }
   }

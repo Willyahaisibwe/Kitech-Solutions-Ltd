@@ -28,31 +28,28 @@ class ConfirmationDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final effectiveConfirmColor = confirmButtonColor ?? 
-        (isDestructive ? Colors.red.shade600 : Theme.of(context).colorScheme.primary);
-    
-    final effectiveIconColor = iconColor == Colors.blue && isDestructive 
-        ? Colors.red.shade600 
+    final effectiveConfirmColor =
+        confirmButtonColor ??
+        (isDestructive
+            ? Colors.red.shade600
+            : Theme.of(context).colorScheme.primary);
+
+    final effectiveIconColor = iconColor == Colors.blue && isDestructive
+        ? Colors.red.shade600
         : iconColor;
 
     return AlertDialog(
       backgroundColor: Colors.white,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       title: Row(
         children: [
           Container(
             padding: EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: effectiveIconColor.withOpacity(0.1),
+              color: effectiveIconColor.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(
-              icon,
-              color: effectiveIconColor,
-              size: 20,
-            ),
+            child: Icon(icon, color: effectiveIconColor, size: 20),
           ),
           SizedBox(width: 12),
           Expanded(
@@ -69,10 +66,7 @@ class ConfirmationDialog extends StatelessWidget {
       ),
       content: Text(
         message,
-        style: TextStyle(
-          fontSize: 16,
-          color: Colors.grey.shade600,
-        ),
+        style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
       ),
       actions: [
         TextButton(
@@ -98,10 +92,7 @@ class ConfirmationDialog extends StatelessWidget {
           ),
           child: Text(
             confirmText,
-            style: TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.w600,
-            ),
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
           ),
         ),
       ],

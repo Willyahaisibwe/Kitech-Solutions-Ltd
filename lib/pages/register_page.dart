@@ -60,6 +60,8 @@ class _RegisterPageState extends State<RegisterPage> {
         phoneNumber: _phoneNumber,
       );
 
+      if (!mounted) return;
+
       if (user != null) {
         ErrorHandler.showSuccess(
           context,
@@ -75,9 +77,12 @@ class _RegisterPageState extends State<RegisterPage> {
         );
       }
     } catch (e) {
+      if (!mounted) return;
       ErrorHandler.showError(context, e);
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 

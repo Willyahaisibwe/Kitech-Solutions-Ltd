@@ -99,15 +99,26 @@ class UserModel {
 
   // Create UserModel from Firestore document
   factory UserModel.fromMap(Map<String, dynamic> map) {
+    DateTime parseDate(dynamic v) {
+      if (v == null) return DateTime.now();
+      if (v is DateTime) return v;
+      if (v is String) return DateTime.parse(v);
+      if (v is int) return DateTime.fromMillisecondsSinceEpoch(v);
+      try {
+        // Firestore Timestamp
+        return v.toDate();
+      } catch (_) {
+        return DateTime.now();
+      }
+    }
+
     return UserModel(
       id: map['id'] ?? '',
       name: map['name'] ?? '',
       email: map['email'] ?? '',
       farmLocation: map['farmLocation'] ?? '',
-      createdAt: DateTime.parse(map['createdAt']),
-      updatedAt: map['updatedAt'] != null
-          ? DateTime.parse(map['updatedAt'])
-          : null,
+      createdAt: parseDate(map['createdAt']),
+      updatedAt: map['updatedAt'] != null ? parseDate(map['updatedAt']) : null,
       isActive: map['isActive'] ?? true,
       deviceID: map['deviceID'] ?? '',
       profileImageUrl: map['profileImageUrl'],
@@ -121,6 +132,11 @@ class UserModel {
     );
   }
 
+  // Sentinel used to distinguish "field not passed" from "field explicitly
+  // set to null" in copyWith (e.g. clearing profileImageUrl when a user
+  // removes their profile photo).
+  static const _sentinel = Object();
+
   // Create a copy of the user with updated fields
   UserModel copyWith({
     String? id,
@@ -131,7 +147,7 @@ class UserModel {
     DateTime? updatedAt,
     bool? isActive,
     String? deviceID,
-    String? profileImageUrl,
+    Object? profileImageUrl = _sentinel,
     String? phoneNumber,
     bool? hasClaimedDevice,
     List<DeviceEntry>? devices,
@@ -145,7 +161,9 @@ class UserModel {
       updatedAt: updatedAt ?? this.updatedAt,
       isActive: isActive ?? this.isActive,
       deviceID: deviceID ?? this.deviceID,
-      profileImageUrl: profileImageUrl ?? this.profileImageUrl,
+      profileImageUrl: identical(profileImageUrl, _sentinel)
+          ? this.profileImageUrl
+          : profileImageUrl as String?,
       phoneNumber: phoneNumber ?? this.phoneNumber,
       hasClaimedDevice: hasClaimedDevice ?? this.hasClaimedDevice,
       devices: devices ?? this.devices,

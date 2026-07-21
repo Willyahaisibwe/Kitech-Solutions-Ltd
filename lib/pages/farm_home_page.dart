@@ -12,7 +12,6 @@ import 'package:smart_crop_dryer/services/error_handler.dart';
 import 'package:smart_crop_dryer/models/voice_command.dart';
 import 'package:smart_crop_dryer/widgets/voice_command_button.dart';
 import 'package:smart_crop_dryer/view_models/farm_settings_view_model.dart';
-import 'package:smart_crop_dryer/widgets/radio_player_card.dart';
 
 class FarmHomePage extends StatefulWidget {
   const FarmHomePage({super.key});
@@ -143,9 +142,10 @@ class _FarmHomePageState extends State<FarmHomePage> {
                         final url = await authService
                             .pickAndUploadProfileImage();
                         if (url != null && context.mounted) {
-                          final updatedUser = authVM.user!.copyWith();
-                          authVM.setUser(updatedUser.copyWith());
-                          await authVM.fetchUserData(authVM.user!.id);
+                          final updatedUser = authVM.user!.copyWith(
+                            profileImageUrl: url,
+                          );
+                          authVM.setUser(updatedUser);
                           ErrorHandler.showSuccess(
                             context,
                             'Profile photo updated!',
@@ -169,10 +169,11 @@ class _FarmHomePageState extends State<FarmHomePage> {
                               ? ClipRRect(
                                   borderRadius: BorderRadius.circular(8),
                                   child: Image.network(
-                                    authVM.user!.profileImageUrl!,
+                                    '${authVM.user!.profileImageUrl!}?t=${DateTime.now().millisecondsSinceEpoch}',
                                     width: 50,
                                     height: 50,
                                     fit: BoxFit.cover,
+                                    key: ValueKey(authVM.user!.profileImageUrl),
                                   ),
                                 )
                               : const Icon(
@@ -483,7 +484,7 @@ class _FarmHomePageState extends State<FarmHomePage> {
                         ),
                         Switch(
                           value: controlVM.control.pumpState,
-                          activeColor: Colors.blue,
+                          activeThumbColor: Colors.blue,
                           onChanged: controlVM.control.autoMode
                               ? null
                               : (value) {
@@ -555,7 +556,7 @@ class _FarmHomePageState extends State<FarmHomePage> {
                         ),
                         Switch(
                           value: controlVM.control.autoMode,
-                          activeColor: Colors.green,
+                          activeThumbColor: Colors.green,
                           onChanged: (value) {
                             if (!isOnline) {
                               _showNoInternetDialog(context);

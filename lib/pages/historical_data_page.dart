@@ -9,11 +9,14 @@ class HistoricalDataPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Make sure your ViewModel is provided higher up in the widget tree
-    final viewModel = Provider.of<HistoricalReadingViewModel>(context, listen: false);
-    
+    final viewModel = Provider.of<HistoricalReadingViewModel>(
+      context,
+      listen: false,
+    );
+
     // Example call to load data when the screen is first built
     WidgetsBinding.instance.addPostFrameCallback((_) {
-       // Load readings for the last 24 hours on initial screen load
+      // Load readings for the last 24 hours on initial screen load
       //viewModel.loadReadingsForLastHours(24);
       viewModel.loadMockData();
     });
@@ -42,11 +45,13 @@ class HistoricalDataPage extends StatelessWidget {
               // --- The Chart Widget ---
               Container(
                 decoration: BoxDecoration(
-                  color: const Color(0xff232d37), // Dark background for a modern look
+                  color: const Color(
+                    0xff232d37,
+                  ), // Dark background for a modern look
                   borderRadius: BorderRadius.circular(10),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
+                      color: Colors.black.withValues(alpha: 0.1),
                       blurRadius: 5,
                       offset: const Offset(0, 3),
                     ),
@@ -63,7 +68,10 @@ class HistoricalDataPage extends StatelessWidget {
                 children: [
                   _buildLegendItem(Colors.blueAccent, 'Actual Temperature'),
                   const SizedBox(width: 20),
-                  _buildLegendItem(Colors.redAccent, 'Desired Temperature (Target)'),
+                  _buildLegendItem(
+                    Colors.redAccent,
+                    'Desired Temperature (Target)',
+                  ),
                 ],
               ),
               // Additional information or controls here...
@@ -73,7 +81,7 @@ class HistoricalDataPage extends StatelessWidget {
       ),
     );
   }
-  
+
   Widget _buildLegendItem(Color color, String text) {
     return Row(
       children: [

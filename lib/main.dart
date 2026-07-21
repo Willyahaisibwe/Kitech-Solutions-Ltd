@@ -8,7 +8,6 @@ import 'package:smart_crop_dryer/pages/account_settings_page.dart';
 import 'package:smart_crop_dryer/pages/app__startup_handler.dart';
 import 'package:smart_crop_dryer/pages/crop_selection_page.dart';
 import 'package:smart_crop_dryer/pages/edit_user_info_page.dart';
-import 'package:smart_crop_dryer/pages/email_verification_page.dart';
 import 'package:smart_crop_dryer/pages/historical_data_page.dart';
 import 'package:smart_crop_dryer/pages/login_page.dart';
 import 'package:smart_crop_dryer/pages/register_page.dart';

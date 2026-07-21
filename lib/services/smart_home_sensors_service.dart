@@ -35,7 +35,7 @@ class SmartHomeSensorsService {
           return SmartHomeSensors(motion: false, temperature: 0.0);
         })
         .handleError((error) {
-          print('❌ Error listening to SmartHome sensors: $error');
+          // Error listening to SmartHome sensors
           return SmartHomeSensors(motion: false, temperature: 0.0);
         });
   }

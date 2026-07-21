@@ -24,14 +24,10 @@ class NetworkService {
           if (value != null && value is Map<dynamic, dynamic>) {
             return Map<String, dynamic>.from(value);
           } else {
-            print(
-              '⚠️ Warning: Signal strength data is not a Map. Using default value {}',
-            );
             return <String, dynamic>{};
           }
         })
         .handleError((error) {
-          print('❌ Error listening to signal strength: $error');
           return <String, dynamic>{};
         });
   }

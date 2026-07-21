@@ -53,7 +53,7 @@ class _LoginPageState extends State<LoginPage> {
         });
       }
     } catch (e) {
-      print('Error loading saved credentials: ${e.toString()}');
+      debugPrint('Error loading saved credentials: ${e.toString()}');
     }
   }
 
@@ -69,14 +69,19 @@ class _LoginPageState extends State<LoginPage> {
         rememberMe: _rememberMe,
       );
 
+      if (!mounted) return;
+
       if (user != null) {
         ErrorHandler.showSuccess(context, 'Welcome back ${user.name}!');
         navigateAfterAuth(context, user);
       }
     } catch (e) {
+      if (!mounted) return;
       ErrorHandler.showError(context, e);
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -110,11 +115,13 @@ class _LoginPageState extends State<LoginPage> {
                 await _authViewModel!.sendPasswordResetEmail(
                   _emailController.text,
                 );
+                if (!parentContext.mounted) return;
                 ErrorHandler.showSuccess(
                   parentContext,
                   'Password reset email sent!',
                 );
               } catch (e) {
+                if (!parentContext.mounted) return;
                 ErrorHandler.showError(parentContext, e);
               }
             },
@@ -162,11 +169,13 @@ class _LoginPageState extends State<LoginPage> {
                   await _authViewModel!.sendPasswordResetEmail(
                     emailController.text,
                   );
+                  if (!parentContext.mounted) return;
                   ErrorHandler.showSuccess(
                     parentContext,
                     'Password reset email sent!',
                   );
                 } catch (e) {
+                  if (!parentContext.mounted) return;
                   ErrorHandler.showError(parentContext, e);
                 }
               }

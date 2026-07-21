@@ -38,22 +38,22 @@ class FarmSensorReadings {
     final humidity = json['Humidity'] ?? {};
     final moisture = json['Moisture'] ?? {};
 
-    double _toDouble(dynamic value) {
+    double toDouble(dynamic value) {
       if (value == null) return 0.0;
       if (value is num) return value.toDouble();
       return double.tryParse(value.toString()) ?? 0.0;
     }
 
     return FarmSensorReadings(
-      temperature1: _toDouble(temperature['T1']),
-      temperature2: _toDouble(temperature['T2']),
-      temperature3: _toDouble(temperature['T3']),
-      humidity1: _toDouble(humidity['H1']),
-      humidity2: _toDouble(humidity['H2']),
-      humidity3: _toDouble(humidity['H3']),
-      moisture1: _toDouble(moisture['M1']),
-      moisture2: _toDouble(moisture['M2']),
-      moisture3: _toDouble(moisture['M3']),
+      temperature1: toDouble(temperature['T1']),
+      temperature2: toDouble(temperature['T2']),
+      temperature3: toDouble(temperature['T3']),
+      humidity1: toDouble(humidity['H1']),
+      humidity2: toDouble(humidity['H2']),
+      humidity3: toDouble(humidity['H3']),
+      moisture1: toDouble(moisture['M1']),
+      moisture2: toDouble(moisture['M2']),
+      moisture3: toDouble(moisture['M3']),
     );
   }
 

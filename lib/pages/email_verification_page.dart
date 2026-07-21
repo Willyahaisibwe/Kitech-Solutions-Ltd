@@ -14,7 +14,6 @@ class EmailVerificationPage extends StatefulWidget {
 class _EmailVerificationPageState extends State<EmailVerificationPage> {
   bool _isSending = false;
   bool _isChecking = false;
-  bool _emailSent = true;
   final AuthService _authService = AuthService();
 
   Future<void> _resendEmail() async {
@@ -23,7 +22,7 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
       final user = _authService.currentUser;
       if (user != null && !user.emailVerified) {
         await user.sendEmailVerification();
-        setState(() => _emailSent = true);
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Row(
@@ -42,6 +41,7 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
         );
       }
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Row(
@@ -57,7 +57,9 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
         ),
       );
     } finally {
-      setState(() => _isSending = false);
+      if (mounted) {
+        setState(() => _isSending = false);
+      }
     }
   }
 
@@ -67,6 +69,7 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
       final user = _authService.currentUser;
       if (user != null) {
         await user.reload();
+        if (!mounted) return;
         if (user.emailVerified) {
           Navigator.pushReplacementNamed(context, '/login');
         } else {
@@ -93,7 +96,9 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
         }
       }
     } finally {
-      setState(() => _isChecking = false);
+      if (mounted) {
+        setState(() => _isChecking = false);
+      }
     }
   }
 

@@ -33,7 +33,7 @@ class FarmNetworkViewModel extends ChangeNotifier {
         try {
           _lastSeen = DateTime.parse(networkInfo.lastSeen);
         } catch (e) {
-          print("Invalid lastSeen format: $e");
+          // Invalid lastSeen format
           _lastSeen = null;
         }
       }

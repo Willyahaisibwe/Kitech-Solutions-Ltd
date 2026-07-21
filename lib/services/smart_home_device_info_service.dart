@@ -41,7 +41,6 @@ class SmartHomeDeviceInfoService {
           return null;
         })
         .handleError((error) {
-          print('❌ Error listening to SmartHome device info: $error');
           return null;
         });
   }
@@ -58,7 +57,6 @@ class SmartHomeDeviceInfoService {
           return null;
         })
         .handleError((error) {
-          print('❌ Error listening to SmartHome network info: $error');
           return null;
         });
   }

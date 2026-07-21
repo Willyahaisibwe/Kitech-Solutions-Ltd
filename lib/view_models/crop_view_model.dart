@@ -5,7 +5,6 @@ import 'package:smart_crop_dryer/services/crop_service.dart';
 import 'dart:async';
 
 class CropViewModel extends ChangeNotifier {
-
   final List<Crop> _availableCrops = [
     Crop(name: 'Maize', iconData: MdiIcons.corn, minTemp: 48, maxTemp: 55),
     Crop(name: 'Wheat', iconData: Icons.grain, minTemp: 50, maxTemp: 60),
@@ -13,8 +12,18 @@ class CropViewModel extends ChangeNotifier {
     Crop(name: 'Beans', iconData: Icons.food_bank, minTemp: 45, maxTemp: 52),
     Crop(name: 'Coffee', iconData: Icons.local_cafe, minTemp: 46, maxTemp: 50),
     Crop(name: 'Millet', iconData: Icons.grass, minTemp: 42, maxTemp: 48),
-    Crop(name: 'Cassava', iconData: Icons.grain_rounded, minTemp: 40, maxTemp: 60),
-    Crop(name: 'Groundnuts', iconData: Icons.grain_sharp, minTemp: 38, maxTemp: 45),
+    Crop(
+      name: 'Cassava',
+      iconData: Icons.grain_rounded,
+      minTemp: 40,
+      maxTemp: 60,
+    ),
+    Crop(
+      name: 'Groundnuts',
+      iconData: Icons.grain_sharp,
+      minTemp: 38,
+      maxTemp: 45,
+    ),
   ];
 
   final CropService cropService;
@@ -27,13 +36,11 @@ class CropViewModel extends ChangeNotifier {
   // StreamSubscription to manage the real-time listener for selected crops.
   StreamSubscription? _cropsSubscription;
 
-  String ? _userId;
-  String ? get userId => _userId;
+  String? _userId;
+  String? get userId => _userId;
 
-  CropViewModel({required this.cropService, String? userId})
-  {
-    if (userId != null && userId.isNotEmpty)
-    {
+  CropViewModel({required this.cropService, String? userId}) {
+    if (userId != null && userId.isNotEmpty) {
       _userId = userId;
       startListening(userId);
     }
@@ -49,13 +56,12 @@ class CropViewModel extends ChangeNotifier {
           (newCrops) {
             _selectedCrops = [];
             for (var crop in newCrops) {
-                _selectedCrops.add(crop);
+              _selectedCrops.add(crop);
             }
 
             notifyListeners();
           },
           onError: (error) {
-            print('❌ ViewModel Error listening to selected crops: $error');
             _selectedCrops = [];
             notifyListeners();
           },
@@ -67,11 +73,8 @@ class CropViewModel extends ChangeNotifier {
     return _selectedCrops.any((existingCrop) => existingCrop.name == crop.name);
   }
 
-
   Future<void> addCrop(String userId, Crop crop) async {
-    
     if (_isCropSelected(crop)) {
-      print('⚠️ Crop ${crop.name} is already selected');
       return;
     }
 
@@ -81,9 +84,8 @@ class CropViewModel extends ChangeNotifier {
 
     try {
       await cropService.addSelectedCrop(userId, crop);
-      print('✅ Crop added to Firestore: ${crop.name}');
     } catch (e) {
-      print('❌ Error adding crop to Firestore: $e');
+      // Error adding crop to Firestore
       // Rollback optimistic update on failure
       _selectedCrops.removeWhere((c) => c.name == crop.name && c.id == null);
       notifyListeners();
@@ -93,9 +95,6 @@ class CropViewModel extends ChangeNotifier {
 
   Future<void> removeCrop(String userId, Crop crop) async {
     if (crop.id == null) {
-      print(
-        '⚠️ Cannot remove crop: Crop has no ID (not yet saved to Firestore or ID missing).',
-      );
       return;
     }
 
@@ -105,16 +104,14 @@ class CropViewModel extends ChangeNotifier {
 
     try {
       await cropService.deleteSelectedCrop(userId, crop.id!);
-      print('✅ Crop deleted from Firestore: ${crop.name}');
     } catch (e) {
-      print('❌ Error deleting crop from Firestore: $e');
+      // Error deleting crop from Firestore
       // Rollback optimistic update on failure
       _selectedCrops.add(crop);
       notifyListeners();
       rethrow; // Re-throw so UI can handle the error
     }
   }
-
 
   Future<void> clearCrops(String userId) async {
     // Create a copy to avoid modifying the list while iterating
@@ -128,13 +125,10 @@ class CropViewModel extends ChangeNotifier {
       for (var crop in cropsToDelete) {
         if (crop.id != null) {
           await cropService.deleteSelectedCrop(userId, crop.id!);
-          print('✅ Deleted ${crop.name} from Firestore.');
-        } else {
-          print('⚠️ Skipping crop without ID during clear: ${crop.name}');
         }
       }
     } catch (e) {
-      print('❌ Error during bulk crop deletion: $e');
+      // Error during bulk crop deletion
       // Rollback on failure
       _selectedCrops = cropsToDelete;
       notifyListeners();

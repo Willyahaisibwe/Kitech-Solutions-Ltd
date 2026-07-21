@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 import 'package:smart_crop_dryer/models/weather.dart';
 import 'package:smart_crop_dryer/view_models/weather_view_model.dart';
 
-
 class WeatherPage extends StatefulWidget {
   const WeatherPage({super.key});
 
@@ -31,8 +30,8 @@ class _WeatherPageState extends State<WeatherPage>
     );
     _slideAnimation =
         Tween<Offset>(begin: const Offset(0, 0.3), end: Offset.zero).animate(
-      CurvedAnimation(parent: _slideController, curve: Curves.easeOutCubic),
-    );
+          CurvedAnimation(parent: _slideController, curve: Curves.easeOutCubic),
+        );
 
     _slideController.forward();
     _loadWeather();
@@ -49,12 +48,15 @@ class _WeatherPageState extends State<WeatherPage>
       isLoading = true;
     });
 
-    Provider.of<WeatherViewModel>(context, listen: false)
-        .fetchWeather('Kampala')
-        .then((_) {
+    Provider.of<WeatherViewModel>(
+      context,
+      listen: false,
+    ).fetchWeather('Kampala').then((_) {
       setState(() {
-        currentWeather =
-            Provider.of<WeatherViewModel>(context, listen: false).weather;
+        currentWeather = Provider.of<WeatherViewModel>(
+          context,
+          listen: false,
+        ).weather;
         isLoading = false;
       });
     });
@@ -97,8 +99,6 @@ class _WeatherPageState extends State<WeatherPage>
         return Colors.blue.shade500;
     }
   }
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -149,28 +149,26 @@ class _WeatherPageState extends State<WeatherPage>
       ),
       body: isLoading
           ? Center(
-              child: CircularProgressIndicator(
-                color: Colors.blue.shade600,
-              ),
+              child: CircularProgressIndicator(color: Colors.blue.shade600),
             )
           : currentWeather == null
-              ? _buildErrorState()
-              : SlideTransition(
-                  position: _slideAnimation,
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      children: [
-                        // Main Weather Card
-                        _buildMainWeatherCard(),
-                        const SizedBox(height: 16),
+          ? _buildErrorState()
+          : SlideTransition(
+              position: _slideAnimation,
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  children: [
+                    // Main Weather Card
+                    _buildMainWeatherCard(),
+                    const SizedBox(height: 16),
 
-                        // Weather Details Grid
-                        _buildWeatherDetailsGrid(),
-                      ],
-                    ),
-                  ),
+                    // Weather Details Grid
+                    _buildWeatherDetailsGrid(),
+                  ],
                 ),
+              ),
+            ),
     );
   }
 
@@ -204,11 +202,7 @@ class _WeatherPageState extends State<WeatherPage>
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(
-                MdiIcons.mapMarker,
-                color: weatherColor,
-                size: 20,
-              ),
+              Icon(MdiIcons.mapMarker, color: weatherColor, size: 20),
               const SizedBox(width: 8),
               Text(
                 currentWeather!.cityName,
@@ -270,8 +264,6 @@ class _WeatherPageState extends State<WeatherPage>
       ),
     );
   }
-
-
 
   Widget _buildWeatherDetailsGrid() {
     return Column(
@@ -336,7 +328,7 @@ class _WeatherPageState extends State<WeatherPage>
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -347,14 +339,10 @@ class _WeatherPageState extends State<WeatherPage>
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
+              color: color.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
-            child: Icon(
-              icon,
-              color: color,
-              size: 28,
-            ),
+            child: Icon(icon, color: color, size: 28),
           ),
           const SizedBox(height: 12),
           Text(
@@ -390,7 +378,7 @@ class _WeatherPageState extends State<WeatherPage>
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withValues(alpha: 0.05),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -399,11 +387,7 @@ class _WeatherPageState extends State<WeatherPage>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              MdiIcons.weatherCloudy,
-              size: 64,
-              color: Colors.grey.shade400,
-            ),
+            Icon(MdiIcons.weatherCloudy, size: 64, color: Colors.grey.shade400),
             const SizedBox(height: 16),
             Text(
               'Unable to load weather',
@@ -417,10 +401,7 @@ class _WeatherPageState extends State<WeatherPage>
             Text(
               'Please check your connection and try again',
               textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey.shade500,
-              ),
+              style: TextStyle(fontSize: 14, color: Colors.grey.shade500),
             ),
             const SizedBox(height: 24),
             ElevatedButton.icon(

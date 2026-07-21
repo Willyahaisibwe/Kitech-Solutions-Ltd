@@ -19,11 +19,8 @@ class FarmSettingsService {
   Future<void> updateThresholdMoistSetting(FarmSettings settings) async {
     try {
       await ref!.update({'ThresholdMoist': settings.thresholdMoist});
-      print(
-        '✅ Farm setting updated: ThresholdMoist = ${settings.thresholdMoist}',
-      );
     } catch (e) {
-      print('❌ Error updating farm setting: $e');
+      // Error updating farm setting
     }
   }
 
@@ -37,14 +34,10 @@ class FarmSettingsService {
           if (value != null && value is num) {
             return FarmSettings(thresholdMoist: value.toDouble());
           } else {
-            print(
-              '⚠️ Warning: ThresholdMoist is null or not a number. Using default 60.0',
-            );
             return FarmSettings(thresholdMoist: 60.0);
           }
         })
         .handleError((error) {
-          print('❌ Error listening to ThresholdMoist: $error');
           return FarmSettings(thresholdMoist: 60.0);
         });
   }

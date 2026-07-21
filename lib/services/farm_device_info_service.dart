@@ -28,12 +28,10 @@ class FarmDeviceInfoService {
           if (value != null && value is Map<dynamic, dynamic>) {
             return FarmDeviceInfo.fromMap(Map<String, dynamic>.from(value));
           } else {
-            print('⚠️ Farm device info is not a Map: $value');
             return null;
           }
         })
         .handleError((error) {
-          print('❌ Error listening to farm device info: $error');
           return null;
         });
   }
@@ -46,12 +44,10 @@ class FarmDeviceInfoService {
           if (value != null && value is Map<dynamic, dynamic>) {
             return FarmNetworkInfo.fromMap(Map<String, dynamic>.from(value));
           } else {
-            print('⚠️ Farm network info is not a Map: $value');
             return null;
           }
         })
         .handleError((error) {
-          print('❌ Error listening to farm network info: $error');
           return null;
         });
   }
@@ -65,7 +61,7 @@ class FarmDeviceInfoService {
         );
       }
     } catch (e) {
-      print('❌ Error getting farm device info: $e');
+      // Error getting farm device info
     }
     return null;
   }

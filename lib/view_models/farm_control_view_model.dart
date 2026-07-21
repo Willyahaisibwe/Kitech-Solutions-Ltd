@@ -37,7 +37,7 @@ class FarmControlViewModel extends ChangeNotifier {
       final updated = _control.copyWith(pumpState: value);
       await controlService.updateControlState(updated);
     } catch (e) {
-      print('❌ Error toggling pump: $e');
+      // Error toggling pump
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -52,7 +52,7 @@ class FarmControlViewModel extends ChangeNotifier {
       final updated = _control.copyWith(autoMode: value);
       await controlService.updateControlState(updated);
     } catch (e) {
-      print('❌ Error toggling auto mode: $e');
+      // Error toggling auto mode
     } finally {
       _isLoading = false;
       notifyListeners();

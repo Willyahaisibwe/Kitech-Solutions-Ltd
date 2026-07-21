@@ -22,13 +22,8 @@ class ControlService {
       var controlData = control.toMap();
 
       await ref!.update(controlData);
-
-      print(
-        '✅ Control state updated: - AutoMode ${control.autoMode}, - FanState: ${control.fanState}'
-        ', - LightState: ${control.lightState}',
-      );
     } catch (e) {
-      print('❌ Error updating control state: $e');
+      // Error updating control state
       throw Exception('Failed to update control state');
     }
   }
@@ -41,14 +36,10 @@ class ControlService {
           if (value != null && value is Map<dynamic, dynamic>) {
             return Control.fromMap(Map<String, dynamic>.from(value));
           } else {
-            print(
-              '⚠️ Warning: Control data is null or not a map. Using default Control state.',
-            );
             return Control(autoMode: false, fanState: false, lightState: false);
           }
         })
         .handleError((error) {
-          print('❌ Error listening to control state: $error');
           return Control(autoMode: false, fanState: false, lightState: false);
         });
   }

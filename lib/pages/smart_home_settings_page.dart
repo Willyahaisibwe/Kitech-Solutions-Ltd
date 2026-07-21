@@ -200,7 +200,7 @@ class _SmartHomeSettingsPageState extends State<SmartHomeSettingsPage> {
                   ),
                   Switch(
                     value: settingsVM.settings.autoLight,
-                    activeColor: Colors.amber.shade700,
+                    activeThumbColor: Colors.amber.shade700,
                     onChanged: settingsVM.isLoading
                         ? null
                         : (value) {
@@ -270,7 +270,7 @@ class _SmartHomeSettingsPageState extends State<SmartHomeSettingsPage> {
                   ),
                   Switch(
                     value: settingsVM.settings.alarmEnabled,
-                    activeColor: Colors.red.shade600,
+                    activeThumbColor: Colors.red.shade600,
                     onChanged: settingsVM.isLoading
                         ? null
                         : (value) {

@@ -23,12 +23,10 @@ class DeviceInfoService {
           if (value != null && value is Map<dynamic, dynamic>) {
             return DeviceInfo.fromMap(Map<String, dynamic>.from(value));
           } else {
-            print('⚠️ Device data is not a Map: $value');
             return null;
           }
         })
         .handleError((error) {
-          print('❌ Error listening to device data: $error');
           return null;
         });
   }
@@ -43,7 +41,7 @@ class DeviceInfoService {
         );
       }
     } catch (e) {
-      print('❌ Error getting device info: $e');
+      // Error getting device info
     }
     return null;
   }

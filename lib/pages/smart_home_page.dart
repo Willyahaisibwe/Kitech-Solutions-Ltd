@@ -277,6 +277,15 @@ class _SmartHomePageState extends State<SmartHomePage>
                   ),
                   _buildDrawerItem(
                     context: context,
+                    icon: Icons.wb_sunny_outlined,
+                    title: 'Weather Info',
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.pushNamed(context, "/weather");
+                    },
+                  ),
+                  _buildDrawerItem(
+                    context: context,
                     icon: Icons.chat_bubble_outline,
                     title: 'Support & Feedback',
                     onTap: () {

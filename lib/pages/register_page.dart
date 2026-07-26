@@ -4,6 +4,7 @@ import 'package:material_design_icons_flutter/material_design_icons_flutter.dart
 import 'package:provider/provider.dart';
 import 'package:smart_crop_dryer/models/user_model.dart';
 import 'package:smart_crop_dryer/pages/email_verification_page.dart';
+import 'package:smart_crop_dryer/pages/qr_scanner_page.dart';
 import 'package:smart_crop_dryer/services/error_handler.dart';
 import 'package:smart_crop_dryer/view_models/auth_view_model.dart';
 
@@ -38,6 +39,19 @@ class _RegisterPageState extends State<RegisterPage> {
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
+  }
+
+  Future<void> _scanDeviceIdQrCode() async {
+    final scannedCode = await Navigator.push<String>(
+      context,
+      MaterialPageRoute(builder: (context) => const QrScannerPage()),
+    );
+
+    if (scannedCode != null && scannedCode.isNotEmpty && mounted) {
+      setState(() {
+        _deviceIdController.text = scannedCode.trim();
+      });
+    }
   }
 
   void _handleRegister() async {
@@ -368,6 +382,14 @@ class _RegisterPageState extends State<RegisterPage> {
                               borderSide: BorderSide(
                                 color: Theme.of(context).colorScheme.primary,
                               ),
+                            ),
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                MdiIcons.qrcodeScan,
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
+                              tooltip: 'Scan QR code',
+                              onPressed: _scanDeviceIdQrCode,
                             ),
                           ),
                           validator: (value) {

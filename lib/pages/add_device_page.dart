@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:smart_crop_dryer/pages/qr_scanner_page.dart';
 import 'package:smart_crop_dryer/services/auth_service.dart';
 import 'package:smart_crop_dryer/services/error_handler.dart';
 import 'package:smart_crop_dryer/view_models/auth_view_model.dart';
@@ -22,6 +24,19 @@ class _AddDevicePageState extends State<AddDevicePage> {
   void dispose() {
     _deviceIdController.dispose();
     super.dispose();
+  }
+
+  Future<void> _scanDeviceIdQrCode() async {
+    final scannedCode = await Navigator.push<String>(
+      context,
+      MaterialPageRoute(builder: (context) => const QrScannerPage()),
+    );
+
+    if (scannedCode != null && scannedCode.isNotEmpty && mounted) {
+      setState(() {
+        _deviceIdController.text = scannedCode.trim();
+      });
+    }
   }
 
   Future<void> _submit() async {
@@ -68,10 +83,18 @@ class _AddDevicePageState extends State<AddDevicePage> {
               const SizedBox(height: 20),
               TextFormField(
                 controller: _deviceIdController,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Device ID',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.devices_other),
+                  border: const OutlineInputBorder(),
+                  prefixIcon: const Icon(Icons.devices_other),
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      MdiIcons.qrcodeScan,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                    tooltip: 'Scan QR code',
+                    onPressed: _scanDeviceIdQrCode,
+                  ),
                 ),
                 textCapitalization: TextCapitalization.characters,
                 validator: (value) {

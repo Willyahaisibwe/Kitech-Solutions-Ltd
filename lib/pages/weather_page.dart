@@ -1,8 +1,13 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:smart_crop_dryer/models/weather.dart';
+import 'package:smart_crop_dryer/models/weather_forecast.dart';
 import 'package:smart_crop_dryer/view_models/weather_view_model.dart';
+import 'package:smart_crop_dryer/models/geo_location.dart';
+import 'package:smart_crop_dryer/pages/location_search_page.dart';
 
 class WeatherPage extends StatefulWidget {
   const WeatherPage({super.key});
@@ -19,6 +24,17 @@ class _WeatherPageState extends State<WeatherPage>
 
   // Mock data - replace with actual API call
   Weather? currentWeather;
+  List<ForecastEntry> forecast = [];
+  String? searchedLocationName; // overrides API city name when set
+  GeoLocation?
+  _activeSearchedLocation; // non-null when viewing a searched place, not GPS
+
+  // Tracks whether the current failure is a location-permission issue,
+  // so we can show a more specific/actionable error state than a
+  // generic network failure.
+  bool isLocationPermissionError = false;
+
+  StreamSubscription<Position>? _positionSubscription;
 
   @override
   void initState() {
@@ -35,31 +51,124 @@ class _WeatherPageState extends State<WeatherPage>
 
     _slideController.forward();
     _loadWeather();
+    _startWatchingLocation();
   }
 
   @override
   void dispose() {
+    _positionSubscription?.cancel();
     _slideController.dispose();
     super.dispose();
+  }
+
+  void _startWatchingLocation() {
+    final viewModel = Provider.of<WeatherViewModel>(context, listen: false);
+
+    _positionSubscription = viewModel.locationService
+        .watchPosition(distanceFilterMeters: 5000)
+        .listen(
+          (position) {
+            // Don't let background GPS movement override a place the
+            // user deliberately searched for.
+            if (_activeSearchedLocation != null) return;
+
+            viewModel.fetchWeatherForPosition(position).then((_) {
+              if (!mounted) return;
+              setState(() {
+                currentWeather = viewModel.weather;
+                forecast = viewModel.forecast;
+                searchedLocationName = null;
+              });
+            });
+          },
+          onError: (_) {
+            // Silently ignore stream errors (e.g. permission revoked
+            // mid-session) — the user can still use manual refresh.
+          },
+        );
   }
 
   void _loadWeather() {
     setState(() {
       isLoading = true;
+      isLocationPermissionError = false;
     });
 
-    Provider.of<WeatherViewModel>(
+    final viewModel = Provider.of<WeatherViewModel>(context, listen: false);
+
+    viewModel
+        .fetchWeatherForCurrentLocation()
+        .then((_) {
+          setState(() {
+            currentWeather = viewModel.weather;
+            forecast = viewModel.forecast;
+            isLoading = false;
+            searchedLocationName = null; // GPS flow: trust the API's own name
+            _activeSearchedLocation = null;
+          });
+        })
+        .catchError((e) {
+          final message = e.toString().toLowerCase();
+          setState(() {
+            currentWeather = null;
+            forecast = [];
+            isLoading = false;
+            isLocationPermissionError =
+                message.contains('permission') || message.contains('disabled');
+          });
+        });
+  }
+
+  Future<void> _searchAndLoadLocation() async {
+    final selected = await Navigator.push<GeoLocation>(
       context,
-      listen: false,
-    ).fetchWeather('Kampala').then((_) {
-      setState(() {
-        currentWeather = Provider.of<WeatherViewModel>(
-          context,
-          listen: false,
-        ).weather;
-        isLoading = false;
-      });
+      MaterialPageRoute(builder: (_) => const LocationSearchPage()),
+    );
+
+    if (!mounted) return; // widget was disposed while the search page was open
+    if (selected == null) return; // user backed out without picking one
+
+    _loadWeatherForLocation(selected);
+  }
+
+  void _loadWeatherForLocation(GeoLocation location) {
+    setState(() {
+      isLoading = true;
+      isLocationPermissionError = false;
     });
+
+    final viewModel = Provider.of<WeatherViewModel>(context, listen: false);
+
+    viewModel
+        .fetchWeatherForLocation(location)
+        .then((_) {
+          if (!mounted) return;
+          setState(() {
+            currentWeather = viewModel.weather;
+            forecast = viewModel.forecast;
+            isLoading = false;
+            searchedLocationName =
+                location.name; // trust what the user searched for
+            _activeSearchedLocation = location;
+          });
+        })
+        .catchError((e) {
+          if (!mounted) return;
+          setState(() {
+            currentWeather = null;
+            forecast = [];
+            isLoading = false;
+            isLocationPermissionError = false;
+          });
+        });
+  }
+
+  void _refresh() {
+    if (_activeSearchedLocation != null) {
+      _loadWeatherForLocation(_activeSearchedLocation!);
+    } else {
+      _loadWeather();
+    }
   }
 
   IconData _getWeatherIcon(String condition) {
@@ -136,13 +245,25 @@ class _WeatherPageState extends State<WeatherPage>
                 color: Colors.blue.shade50,
                 borderRadius: BorderRadius.circular(12),
               ),
+              child: Icon(Icons.add, color: Colors.blue.shade600, size: 20),
+            ),
+            onPressed: isLoading ? null : _searchAndLoadLocation,
+          ),
+          const SizedBox(width: 4),
+          IconButton(
+            icon: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.blue.shade50,
+                borderRadius: BorderRadius.circular(12),
+              ),
               child: Icon(
                 MdiIcons.refresh,
                 color: Colors.blue.shade600,
                 size: 20,
               ),
             ),
-            onPressed: isLoading ? null : _loadWeather,
+            onPressed: isLoading ? null : _refresh,
           ),
           const SizedBox(width: 8),
         ],
@@ -152,7 +273,9 @@ class _WeatherPageState extends State<WeatherPage>
               child: CircularProgressIndicator(color: Colors.blue.shade600),
             )
           : currentWeather == null
-          ? _buildErrorState()
+          ? (isLocationPermissionError
+                ? _buildLocationPermissionErrorState()
+                : _buildErrorState())
           : SlideTransition(
               position: _slideAnimation,
               child: SingleChildScrollView(
@@ -165,6 +288,10 @@ class _WeatherPageState extends State<WeatherPage>
 
                     // Weather Details Grid
                     _buildWeatherDetailsGrid(),
+                    const SizedBox(height: 16),
+
+                    // 5-Day Forecast
+                    if (forecast.isNotEmpty) _buildForecastSection(),
                   ],
                 ),
               ),
@@ -205,7 +332,7 @@ class _WeatherPageState extends State<WeatherPage>
               Icon(MdiIcons.mapMarker, color: weatherColor, size: 20),
               const SizedBox(width: 8),
               Text(
-                currentWeather!.cityName,
+                searchedLocationName ?? currentWeather!.displayCityName,
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
@@ -368,6 +495,145 @@ class _WeatherPageState extends State<WeatherPage>
     );
   }
 
+  Widget _buildForecastSection() {
+    // Group the 3-hour entries into days, keyed by date (ignoring time).
+    final Map<DateTime, List<ForecastEntry>> byDay = {};
+    for (final entry in forecast) {
+      final localDt = entry.dateTime.toLocal();
+      final dayKey = DateTime(localDt.year, localDt.month, localDt.day);
+      byDay.putIfAbsent(dayKey, () => []).add(entry);
+    }
+
+    final days = byDay.keys.toList()..sort();
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                MdiIcons.calendarRange,
+                color: Colors.blue.shade600,
+                size: 20,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                '5-Day Forecast',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.grey.shade800,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          ...days.map((day) => _buildDayForecastRow(day, byDay[day]!)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDayForecastRow(DateTime day, List<ForecastEntry> entries) {
+    // Representative entry: prefer midday reading, otherwise the first one.
+    final representative = entries.firstWhere(
+      (e) => e.dateTime.toLocal().hour >= 11 && e.dateTime.toLocal().hour <= 14,
+      orElse: () => entries.first,
+    );
+
+    final minTemp = entries
+        .map((e) => e.temperatureCelsius)
+        .reduce((a, b) => a < b ? a : b);
+    final maxTemp = entries
+        .map((e) => e.temperatureCelsius)
+        .reduce((a, b) => a > b ? a : b);
+    final maxRainChance = entries
+        .map((e) => e.probabilityOfPrecipitation)
+        .reduce((a, b) => a > b ? a : b);
+
+    final weatherColor = _getWeatherColor(representative.conditionMain);
+    final today = DateTime.now();
+    final isToday =
+        day.year == today.year &&
+        day.month == today.month &&
+        day.day == today.day;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 64,
+            child: Text(
+              isToday ? 'Today' : _weekdayLabel(day.weekday),
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: Colors.grey.shade700,
+              ),
+            ),
+          ),
+          Icon(
+            _getWeatherIcon(representative.conditionMain),
+            color: weatherColor,
+            size: 24,
+          ),
+          const SizedBox(width: 12),
+          Row(
+            children: [
+              Icon(
+                MdiIcons.waterOutline,
+                size: 14,
+                color: maxRainChance > 0
+                    ? Colors.blue.shade400
+                    : Colors.grey.shade300,
+              ),
+              const SizedBox(width: 2),
+              Text(
+                '${(maxRainChance * 100).round()}%',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: maxRainChance > 0
+                      ? Colors.blue.shade400
+                      : Colors.grey.shade400,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+          const Spacer(),
+          Text(
+            '${minTemp.round()}° / ${maxTemp.round()}°',
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey.shade800,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _weekdayLabel(int weekday) {
+    const labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    return labels[weekday - 1];
+  }
+
   Widget _buildErrorState() {
     return Center(
       child: Container(
@@ -419,6 +685,91 @@ class _WeatherPageState extends State<WeatherPage>
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLocationPermissionErrorState() {
+    return Center(
+      child: Container(
+        margin: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(32),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              MdiIcons.mapMarkerOff,
+              size: 64,
+              color: Colors.orange.shade400,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Location access needed',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: Colors.grey.shade700,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Enable location services so we can show weather for where you are.',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 14, color: Colors.grey.shade500),
+            ),
+            const SizedBox(height: 24),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                OutlinedButton.icon(
+                  onPressed: () async {
+                    await Geolocator.openAppSettings();
+                  },
+                  icon: const Icon(Icons.settings),
+                  label: const Text('Open Settings'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.orange.shade700,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                ElevatedButton.icon(
+                  onPressed: _loadWeather,
+                  icon: const Icon(Icons.refresh),
+                  label: const Text('Retry'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue.shade600,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ],
         ),

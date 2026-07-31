@@ -24,6 +24,41 @@ class CropViewModel extends ChangeNotifier {
       minTemp: 38,
       maxTemp: 45,
     ),
+    Crop(name: 'Sorghum', iconData: Icons.eco, minTemp: 45, maxTemp: 55),
+    Crop(name: 'Cowpeas', iconData: Icons.spa, minTemp: 45, maxTemp: 52),
+    Crop(
+      name: 'Soybeans',
+      iconData: Icons.local_florist,
+      minTemp: 40,
+      maxTemp: 50,
+    ),
+    Crop(
+      name: 'Sweet Potatoes',
+      iconData: MdiIcons.sprout,
+      minTemp: 55,
+      maxTemp: 65,
+    ),
+    Crop(name: 'Mango', iconData: MdiIcons.foodApple, minTemp: 50, maxTemp: 60),
+    Crop(
+      name: 'Onions',
+      iconData: Icons.local_dining,
+      minTemp: 50,
+      maxTemp: 60,
+    ),
+    Crop(
+      name: 'Chili/Pepper',
+      iconData: MdiIcons.chiliHot,
+      minTemp: 50,
+      maxTemp: 60,
+    ),
+    Crop(name: 'Ginger', iconData: Icons.grass, minTemp: 50, maxTemp: 60),
+    Crop(name: 'Garlic', iconData: Icons.lightbulb_outline, minTemp: 50, maxTemp: 60),
+    Crop(
+      name: 'Mushrooms',
+      iconData: MdiIcons.mushroom,
+      minTemp: 45,
+      maxTemp: 55,
+    ),
   ];
 
   final CropService cropService;

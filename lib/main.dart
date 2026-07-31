@@ -55,12 +55,28 @@ import 'package:smart_crop_dryer/view_models/smart_home_sensors_view_model.dart'
 import 'package:smart_crop_dryer/view_models/smart_home_settings_view_model.dart';
 import 'package:smart_crop_dryer/pages/smart_home_page.dart';
 import 'package:smart_crop_dryer/pages/smart_home_settings_page.dart';
+import 'package:smart_crop_dryer/services/app_update_service.dart';
+import 'package:smart_crop_dryer/widgets/update_dialog.dart';
+
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   setupDependencies();
+
+  // Check for a new app version once per cold start, independent of
+  // whatever screen the user ends up on (login, dashboard, etc.).
+  WidgetsBinding.instance.addPostFrameCallback((_) async {
+    final updateInfo = await AppUpdateService().checkForUpdate();
+    if (updateInfo != null && updateInfo.updateAvailable) {
+      final context = navigatorKey.currentContext;
+      if (context != null && context.mounted) {
+        showUpdateDialog(context, updateInfo);
+      }
+    }
+  });
 
   runApp(
     MultiProvider(
@@ -434,6 +450,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      navigatorKey: navigatorKey,
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         useMaterial3: true,

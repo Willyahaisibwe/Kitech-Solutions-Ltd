@@ -1,4 +1,4 @@
-// lib/pages/marketplace_page.dart
+// filepath: c:\Users\willi\Documents\Flutter Projects\Kitech Solutions Ltd\smart-crop-dryer\lib\pages\marketplace_page.dart
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
@@ -16,7 +16,6 @@ class MarketplacePage extends StatefulWidget {
 
 class _MarketplacePageState extends State<MarketplacePage> {
   final MarketplaceService _marketplaceService = MarketplaceService();
-
   final NumberFormat _priceFormat = NumberFormat.decimalPattern();
 
   @override
@@ -58,6 +57,7 @@ class _MarketplacePageState extends State<MarketplacePage> {
           }
 
           if (snapshot.hasError) {
+            debugPrint('Marketplace load error: ${snapshot.error}');
             return Center(
               child: Text(
                 "Couldn't load listings. Check your connection.",
@@ -139,7 +139,7 @@ class _MarketplacePageState extends State<MarketplacePage> {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: .05),
+              color: const Color.fromRGBO(0, 0, 0, 0.05),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),

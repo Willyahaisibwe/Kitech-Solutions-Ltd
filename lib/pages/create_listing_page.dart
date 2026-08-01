@@ -228,7 +228,9 @@ class _CreateListingPageState extends State<CreateListingPage> {
       Navigator.pop(context);
     } catch (e) {
       if (!mounted) return;
-      _showErrorSnackBar('Failed to post listing: ${e.toString()}');
+      _showErrorSnackBar(
+        'Something went wrong while posting your listing. Please check your internet connection and try again.',
+      );
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);

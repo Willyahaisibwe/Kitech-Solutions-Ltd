@@ -16,7 +16,30 @@ class CommunityPage extends StatelessWidget {
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
-        children: [const RadioPlayerCard()],
+        children: [
+          Card(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: ListTile(
+              leading: Icon(
+                Icons.storefront_outlined,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+              title: const Text(
+                'Marketplace',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              subtitle: const Text('Browse products, tools and supplies'),
+              trailing: const Icon(Icons.arrow_forward_ios, size: 18),
+              onTap: () {
+                Navigator.pushNamed(context, '/marketplace');
+              },
+            ),
+          ),
+          const SizedBox(height: 16),
+          const RadioPlayerCard(),
+        ],
       ),
     );
   }

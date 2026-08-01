@@ -5,6 +5,8 @@ import 'package:smart_crop_dryer/models/user_model.dart';
 import 'package:smart_crop_dryer/services/error_handler.dart';
 import 'package:smart_crop_dryer/view_models/auth_view_model.dart';
 import 'package:smart_crop_dryer/widgets/navigation_helper.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+import 'package:smart_crop_dryer/services/app_update_service.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -29,6 +31,12 @@ class _LoginPageState extends State<LoginPage> {
     super.initState();
 
     _authViewModel = Provider.of<AuthViewModel>(context, listen: false);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      AppUpdateService().markLatestHandledIfInstalled().then((_) {
+        debugPrint('markLatestHandledIfInstalled finished');
+      });
+    });
 
     _loadSavedCredentials();
   }
@@ -468,16 +476,52 @@ class _LoginPageState extends State<LoginPage> {
                 ),
                 SizedBox(height: 40),
                 // App version or footer info
-                Text(
-                  'Kitech Solutions v1.0',
-                  style: TextStyle(color: Colors.grey[400], fontSize: 12),
-                ),
+                const VersionLabel(),
                 SizedBox(height: 20),
               ],
             ),
           ),
         ),
       ),
+    );
+  }
+}
+
+class VersionLabel extends StatefulWidget {
+  const VersionLabel({super.key});
+
+  @override
+  State<VersionLabel> createState() => _VersionLabelState();
+}
+
+class _VersionLabelState extends State<VersionLabel> {
+  late final Future<String> _versionFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _versionFuture = _loadVersionText();
+  }
+
+  Future<String> _loadVersionText() async {
+    final packageInfo = await PackageInfo.fromPlatform();
+    return 'Kitech Solutions v${packageInfo.version}';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<String>(
+      future: _versionFuture,
+      builder: (context, snapshot) {
+        final text =
+            snapshot.connectionState == ConnectionState.done && snapshot.hasData
+            ? snapshot.data!
+            : 'Kitech Solutions v...';
+        return Text(
+          text,
+          style: const TextStyle(color: Colors.grey, fontSize: 12),
+        );
+      },
     );
   }
 }

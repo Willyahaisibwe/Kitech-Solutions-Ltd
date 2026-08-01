@@ -1,7 +1,7 @@
 // lib/widgets/update_dialog.dart
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:smart_crop_dryer/services/app_update_service.dart';
+import 'package:smart_crop_dryer/widgets/download_progress_dialog.dart';
 
 Future<void> showUpdateDialog(BuildContext context, UpdateInfo info) {
   return showDialog(
@@ -39,12 +39,9 @@ Future<void> showUpdateDialog(BuildContext context, UpdateInfo info) {
           child: const Text('Later'),
         ),
         ElevatedButton(
-          onPressed: () async {
+          onPressed: () {
             Navigator.pop(dialogContext);
-            final uri = Uri.parse(info.downloadUrl);
-            if (await canLaunchUrl(uri)) {
-              await launchUrl(uri, mode: LaunchMode.externalApplication);
-            }
+            showDownloadProgressDialog(context, info.downloadUrl);
           },
           child: const Text('Update Now'),
         ),

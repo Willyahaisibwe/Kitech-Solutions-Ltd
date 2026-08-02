@@ -6,6 +6,7 @@ import 'package:smart_crop_dryer/models/marketplace_listing.dart';
 import 'package:smart_crop_dryer/pages/create_listing_page.dart';
 import 'package:smart_crop_dryer/pages/listing_detail_page.dart';
 import 'package:smart_crop_dryer/services/marketplace_service.dart';
+import 'package:smart_crop_dryer/utils/time_ago.dart';
 
 class MarketplacePage extends StatefulWidget {
   const MarketplacePage({super.key});
@@ -17,6 +18,33 @@ class MarketplacePage extends StatefulWidget {
 class _MarketplacePageState extends State<MarketplacePage> {
   final MarketplaceService _marketplaceService = MarketplaceService();
   final NumberFormat _priceFormat = NumberFormat.decimalPattern();
+  final TextEditingController _searchController = TextEditingController();
+  late final Stream<List<MarketplaceListing>> _listingsStream;
+
+  String _searchQuery = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _listingsStream = _marketplaceService.listenForActiveListings();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  List<MarketplaceListing> _applyFilters(List<MarketplaceListing> listings) {
+    if (_searchQuery.isEmpty) return listings;
+    return listings
+        .where(
+          (listing) => listing.itemName.toLowerCase().contains(
+            _searchQuery.toLowerCase(),
+          ),
+        )
+        .toList();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -34,6 +62,15 @@ class _MarketplacePageState extends State<MarketplacePage> {
           ),
         ),
         centerTitle: true,
+        actions: [
+          IconButton(
+            icon: Icon(Icons.person_outline, color: Colors.grey.shade700),
+            tooltip: 'My Listings',
+            onPressed: () {
+              Navigator.pushNamed(context, '/myListings');
+            },
+          ),
+        ],
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
@@ -50,7 +87,7 @@ class _MarketplacePageState extends State<MarketplacePage> {
         ),
       ),
       body: StreamBuilder<List<MarketplaceListing>>(
-        stream: _marketplaceService.listenForActiveListings(),
+        stream: _listingsStream,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
@@ -66,9 +103,9 @@ class _MarketplacePageState extends State<MarketplacePage> {
             );
           }
 
-          final listings = snapshot.data ?? [];
+          final allListings = snapshot.data ?? [];
 
-          if (listings.isEmpty) {
+          if (allListings.isEmpty) {
             return Center(
               child: Padding(
                 padding: const EdgeInsets.all(32),
@@ -104,19 +141,77 @@ class _MarketplacePageState extends State<MarketplacePage> {
             );
           }
 
-          return GridView.builder(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 90),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              crossAxisSpacing: 12,
-              mainAxisSpacing: 12,
-              childAspectRatio: 0.72,
-            ),
-            itemCount: listings.length,
-            itemBuilder: (context, index) {
-              final listing = listings[index];
-              return _buildListingCard(listing);
-            },
+          final listings = _applyFilters(allListings);
+
+          return Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                child: TextField(
+                  controller: _searchController,
+                  onChanged: (value) {
+                    setState(() => _searchQuery = value);
+                  },
+                  decoration: InputDecoration(
+                    hintText: "Search by crop name...",
+                    prefixIcon: const Icon(Icons.search, size: 20),
+                    filled: true,
+                    fillColor: Colors.white,
+                    contentPadding: const EdgeInsets.symmetric(vertical: 0),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: Colors.grey.shade200),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: Colors.grey.shade200),
+                    ),
+                  ),
+                ),
+              ),
+              Expanded(
+                child: listings.isEmpty
+                    ? Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(32),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.search_off,
+                                size: 56,
+                                color: Colors.grey.shade300,
+                              ),
+                              const SizedBox(height: 12),
+                              Text(
+                                "No listings match your search",
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  color: Colors.grey.shade600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      )
+                    : GridView.builder(
+                        padding: const EdgeInsets.fromLTRB(16, 12, 16, 90),
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 2,
+                              crossAxisSpacing: 12,
+                              mainAxisSpacing: 12,
+                              childAspectRatio: 0.72,
+                            ),
+                        itemCount: listings.length,
+                        itemBuilder: (context, index) {
+                          final listing = listings[index];
+                          return _buildListingCard(listing);
+                        },
+                      ),
+              ),
+            ],
           );
         },
       ),
@@ -223,6 +318,11 @@ class _MarketplacePageState extends State<MarketplacePage> {
                         ),
                       ),
                     ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    timeAgo(listing.createdAt),
+                    style: TextStyle(fontSize: 10, color: Colors.grey.shade400),
                   ),
                 ],
               ),

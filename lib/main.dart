@@ -58,6 +58,7 @@ import 'package:smart_crop_dryer/pages/smart_home_settings_page.dart';
 import 'package:smart_crop_dryer/services/app_update_service.dart';
 import 'package:smart_crop_dryer/widgets/update_dialog.dart';
 import 'package:smart_crop_dryer/pages/marketplace_page.dart';
+import 'package:smart_crop_dryer/pages/my_listings_page.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
@@ -492,6 +493,7 @@ class MyApp extends StatelessWidget {
         '/homeHome': (context) => const SmartHomePage(),
         '/smartHomeSettings': (context) => const SmartHomeSettingsPage(),
         '/marketplace': (context) => const MarketplacePage(),
+        '/myListings': (context) => const MyListingsPage(),
       },
     );
   }

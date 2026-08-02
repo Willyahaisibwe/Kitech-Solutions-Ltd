@@ -5,6 +5,7 @@ import 'package:material_design_icons_flutter/material_design_icons_flutter.dart
 import 'package:provider/provider.dart';
 import 'package:smart_crop_dryer/models/marketplace_listing.dart';
 import 'package:smart_crop_dryer/services/marketplace_service.dart';
+import 'package:smart_crop_dryer/utils/time_ago.dart';
 import 'package:smart_crop_dryer/view_models/auth_view_model.dart';
 import 'package:smart_crop_dryer/widgets/confirmation_dialog.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -179,6 +180,20 @@ class _ListingDetailPageState extends State<ListingDetailPage> {
                         style: TextStyle(
                           fontSize: 15,
                           color: Colors.grey.shade700,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Icon(
+                        Icons.access_time,
+                        size: 16,
+                        color: Colors.grey.shade500,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        timeAgo(listing.createdAt),
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Colors.grey.shade500,
                         ),
                       ),
                     ],

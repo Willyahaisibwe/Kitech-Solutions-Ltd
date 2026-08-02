@@ -12,6 +12,13 @@ class MarketplaceService {
   CollectionReference<Map<String, dynamic>> get _listings =>
       _firestore.collection('MarketplaceListings');
 
+  static Map<String, dynamic> buildSellerProfileUpdateData({
+    required String sellerName,
+    required String? sellerPhotoUrl,
+  }) {
+    return {'sellerName': sellerName, 'sellerPhotoUrl': sellerPhotoUrl};
+  }
+
   /// Uploads a listing photo to Cloudinary and returns the secure URL.
   Future<String> uploadListingImage(
     Uint8List imageBytes,
@@ -67,6 +74,47 @@ class MarketplaceService {
     } catch (e) {
       debugPrint('❌ Error deleting listing: $e');
       throw Exception('Failed to delete listing');
+    }
+  }
+
+  Future<void> syncSellerProfileAcrossListings({
+    required String sellerId,
+    required String sellerName,
+    required String? sellerPhotoUrl,
+  }) async {
+    try {
+      final snapshot = await _listings
+          .where('sellerId', isEqualTo: sellerId)
+          .get();
+
+      if (snapshot.docs.isEmpty) {
+        return;
+      }
+
+      final payload = buildSellerProfileUpdateData(
+        sellerName: sellerName,
+        sellerPhotoUrl: sellerPhotoUrl,
+      );
+
+      final batchSize = 500;
+      for (var i = 0; i < snapshot.docs.length; i += batchSize) {
+        final batch = _firestore.batch();
+        final chunk = snapshot.docs.sublist(
+          i,
+          i + batchSize < snapshot.docs.length
+              ? i + batchSize
+              : snapshot.docs.length,
+        );
+
+        for (final doc in chunk) {
+          batch.update(doc.reference, payload);
+        }
+
+        await batch.commit();
+      }
+    } catch (e) {
+      debugPrint('❌ Error syncing seller profile across listings: $e');
+      throw Exception('Failed to sync seller profile across listings');
     }
   }
 

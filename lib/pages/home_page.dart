@@ -179,7 +179,7 @@ class _HomePageState extends State<HomePage>
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Smart Crop Dryer',
+                          'Kitech Solutions Ltd',
                           style: TextStyle(
                             fontSize: 22,
                             fontWeight: FontWeight.bold,
@@ -650,17 +650,23 @@ class _HomePageState extends State<HomePage>
                             Container(
                               padding: EdgeInsets.all(12),
                               decoration: BoxDecoration(
-                                color: controlViewModel.control.fanState && networkViewModel.isConnected
+                                color:
+                                    controlViewModel.control.fanState &&
+                                        networkViewModel.isConnected
                                     ? Colors.green.shade100
                                     : Colors.grey.shade100,
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: RotationTransition(
-                                turns: networkViewModel.isConnected ? _animation : AlwaysStoppedAnimation(0),
+                                turns: networkViewModel.isConnected
+                                    ? _animation
+                                    : AlwaysStoppedAnimation(0),
                                 child: Icon(
                                   MdiIcons.fan,
                                   size: 32,
-                                  color: controlViewModel.control.fanState && networkViewModel.isConnected
+                                  color:
+                                      controlViewModel.control.fanState &&
+                                          networkViewModel.isConnected
                                       ? Colors.green.shade700
                                       : Colors.grey.shade600,
                                 ),
@@ -680,13 +686,16 @@ class _HomePageState extends State<HomePage>
                                 ),
                                 SizedBox(height: 4),
                                 Text(
-                                  controlViewModel.control.fanState && networkViewModel.isConnected
+                                  controlViewModel.control.fanState &&
+                                          networkViewModel.isConnected
                                       ? 'RUNNING'
                                       : 'STOPPED',
                                   style: TextStyle(
                                     fontSize: 14,
                                     fontWeight: FontWeight.w600,
-                                    color: controlViewModel.control.fanState && networkViewModel.isConnected
+                                    color:
+                                        controlViewModel.control.fanState &&
+                                            networkViewModel.isConnected
                                         ? Colors.green.shade700
                                         : Colors.grey.shade600,
                                   ),
@@ -698,7 +707,9 @@ class _HomePageState extends State<HomePage>
                         Container(
                           padding: EdgeInsets.all(8),
                           decoration: BoxDecoration(
-                            color: controlViewModel.control.fanState && networkViewModel.isConnected
+                            color:
+                                controlViewModel.control.fanState &&
+                                    networkViewModel.isConnected
                                 ? Colors.green.shade100
                                 : Colors.red.shade100,
                             shape: BoxShape.circle,
@@ -708,7 +719,9 @@ class _HomePageState extends State<HomePage>
                             height: 12,
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
-                              color: controlViewModel.control.fanState && networkViewModel.isConnected
+                              color:
+                                  controlViewModel.control.fanState &&
+                                      networkViewModel.isConnected
                                   ? Colors.green.shade600
                                   : Colors.red.shade600,
                             ),
@@ -847,7 +860,9 @@ class _HomePageState extends State<HomePage>
                             Container(
                               padding: EdgeInsets.all(12),
                               decoration: BoxDecoration(
-                                color: controlViewModel.control.lightState && networkViewModel.isConnected
+                                color:
+                                    controlViewModel.control.lightState &&
+                                        networkViewModel.isConnected
                                     ? Colors.yellow.shade100
                                     : Colors.grey.shade100,
                                 borderRadius: BorderRadius.circular(12),
@@ -855,7 +870,9 @@ class _HomePageState extends State<HomePage>
                               child: Icon(
                                 MdiIcons.lightbulbOnOutline,
                                 size: 32,
-                                color: controlViewModel.control.lightState && networkViewModel.isConnected
+                                color:
+                                    controlViewModel.control.lightState &&
+                                        networkViewModel.isConnected
                                     ? Colors.yellow.shade700
                                     : Colors.grey.shade600,
                               ),
@@ -874,13 +891,16 @@ class _HomePageState extends State<HomePage>
                                 ),
                                 SizedBox(height: 4),
                                 Text(
-                                  controlViewModel.control.lightState && networkViewModel.isConnected
+                                  controlViewModel.control.lightState &&
+                                          networkViewModel.isConnected
                                       ? 'ON'
                                       : 'OFF',
                                   style: TextStyle(
                                     fontSize: 14,
                                     fontWeight: FontWeight.w600,
-                                    color: controlViewModel.control.lightState && networkViewModel.isConnected
+                                    color:
+                                        controlViewModel.control.lightState &&
+                                            networkViewModel.isConnected
                                         ? Colors.yellow.shade700
                                         : Colors.grey.shade600,
                                   ),
@@ -892,7 +912,9 @@ class _HomePageState extends State<HomePage>
                         Container(
                           padding: EdgeInsets.all(8),
                           decoration: BoxDecoration(
-                            color: controlViewModel.control.lightState && networkViewModel.isConnected
+                            color:
+                                controlViewModel.control.lightState &&
+                                    networkViewModel.isConnected
                                 ? Colors.yellow.shade100
                                 : Colors.red.shade100,
                             shape: BoxShape.circle,
@@ -902,7 +924,9 @@ class _HomePageState extends State<HomePage>
                             height: 12,
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
-                              color: controlViewModel.control.lightState && networkViewModel.isConnected
+                              color:
+                                  controlViewModel.control.lightState &&
+                                      networkViewModel.isConnected
                                   ? Colors.yellow.shade600
                                   : Colors.red.shade600,
                             ),
@@ -917,14 +941,19 @@ class _HomePageState extends State<HomePage>
                       child: GradientButton(
                         onPressed: _onSwitchLight,
                         icon: Icon(
-                          controlViewModel.control.lightState && networkViewModel.isConnected
+                          controlViewModel.control.lightState &&
+                                  networkViewModel.isConnected
                               ? Icons.lightbulb_outlined
                               : Icons.lightbulb,
                         ),
-                        text: controlViewModel.control.lightState  && networkViewModel.isConnected
+                        text:
+                            controlViewModel.control.lightState &&
+                                networkViewModel.isConnected
                             ? 'Turn Off Light'
                             : 'Turn On Light',
-                        gradientColors: controlViewModel.control.lightState && networkViewModel.isConnected
+                        gradientColors:
+                            controlViewModel.control.lightState &&
+                                networkViewModel.isConnected
                             ? [Colors.red.shade600, Colors.red.shade500]
                             : [Colors.green.shade600, Colors.green.shade500],
                         textColor: Colors.white,

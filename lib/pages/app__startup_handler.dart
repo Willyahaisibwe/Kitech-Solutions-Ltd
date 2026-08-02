@@ -73,7 +73,7 @@ class _AppStartupHandlerState extends State<AppStartupHandler> {
 
             // App name
             Text(
-              'Smart Crop Dryer',
+              'Kitech Solutions Ltd',
               style: TextStyle(
                 fontSize: 28,
                 fontWeight: FontWeight.bold,

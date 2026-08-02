@@ -8,10 +8,12 @@ import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:smart_crop_dryer/models/user_model.dart';
 import 'package:smart_crop_dryer/services/cloudinary_config.dart';
+import 'package:smart_crop_dryer/services/marketplace_service.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final MarketplaceService _marketplaceService = MarketplaceService();
 
   // SharedPreferences keys
   static const String _rememberMeKey = 'remember_me';
@@ -78,10 +80,23 @@ class AuthService {
 
       // No cache-busting needed: every upload gets a distinct URL now,
       // since we no longer reuse the same public_id.
+      final currentUserDoc = await _firestore
+          .collection('Users')
+          .doc(userId)
+          .get();
+      final currentUserData = currentUserDoc.data();
+      final currentName = (currentUserData?['name'] as String?) ?? '';
+
       await _firestore.collection('Users').doc(userId).update({
         'profileImageUrl': uploadedUrl,
         'updatedAt': FieldValue.serverTimestamp(),
       });
+
+      await _marketplaceService.syncSellerProfileAcrossListings(
+        sellerId: userId,
+        sellerName: currentName,
+        sellerPhotoUrl: uploadedUrl,
+      );
 
       return uploadedUrl;
     } catch (e) {
@@ -494,10 +509,17 @@ class AuthService {
 
   Future<void> updateUserData(UserModel userModel) async {
     try {
+      final updatedUser = userModel.copyWith(updatedAt: DateTime.now());
       await _firestore
           .collection('Users')
           .doc(userModel.id)
-          .update(userModel.copyWith(updatedAt: DateTime.now()).toMap());
+          .update(updatedUser.toMap());
+
+      await _marketplaceService.syncSellerProfileAcrossListings(
+        sellerId: userModel.id,
+        sellerName: updatedUser.name,
+        sellerPhotoUrl: updatedUser.profileImageUrl,
+      );
     } catch (e) {
       throw UserDataException('Error updating user data');
     }

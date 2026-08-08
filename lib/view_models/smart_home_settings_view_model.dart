@@ -10,6 +10,7 @@ class SmartHomeSettingsViewModel extends ChangeNotifier {
     alarmEnabled: false,
     autoLight: false,
     thresholdTemp: 30.0,
+    neighbourAlertsEnabled: false,
   );
   SmartHomeSettings get settings => _settings;
 
@@ -55,6 +56,8 @@ class SmartHomeSettingsViewModel extends ChangeNotifier {
       _updateAndSet(_settings.copyWith(autoLight: value));
   Future<void> setThresholdTemp(double value) =>
       _updateAndSet(_settings.copyWith(thresholdTemp: value));
+  Future<void> toggleNeighbourAlerts(bool value) =>
+      _updateAndSet(_settings.copyWith(neighbourAlertsEnabled: value));
 
   @override
   void dispose() {

@@ -277,6 +277,15 @@ class _SmartHomePageState extends State<SmartHomePage>
                   ),
                   _buildDrawerItem(
                     context: context,
+                    icon: Icons.shield_outlined,
+                    title: 'Neighbour Alerts',
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.pushNamed(context, "/smartHomeEspNow");
+                    },
+                  ),
+                  _buildDrawerItem(
+                    context: context,
                     icon: Icons.wb_sunny_outlined,
                     title: 'Weather Info',
                     onTap: () {
@@ -433,16 +442,20 @@ class _SmartHomePageState extends State<SmartHomePage>
                     icon: Icons.thermostat,
                     iconColor: Colors.orange,
                     label: "Temperature",
-                    value: "${sensors.temperature.toStringAsFixed(1)}°C",
+                    value: isOnline
+                        ? "${sensors.temperature.toStringAsFixed(1)}°C"
+                        : "--.-°C",
                   ),
                   Container(width: 1, height: 50, color: Colors.grey.shade200),
                   _sensorTile(
                     icon: Icons.sensors,
-                    iconColor: sensors.motion
+                    iconColor: (isOnline && sensors.motion)
                         ? Colors.red
                         : Colors.grey.shade400,
                     label: "Motion",
-                    value: sensors.motion ? "Detected" : "Clear",
+                    value: isOnline
+                        ? (sensors.motion ? "Detected" : "Clear")
+                        : "--",
                   ),
                 ],
               ),
@@ -452,11 +465,17 @@ class _SmartHomePageState extends State<SmartHomePage>
 
             // Light 1
             _toggleCard(
-              icon: Icons.lightbulb_outline,
+              iconWidget: _buildSmartHomeLightIcon(
+                isOn: controlVM.control.light1 && isOnline,
+              ),
               iconColor: Colors.amber,
               title: "Light 1",
-              subtitle: controlVM.control.light1 ? "On" : "Off",
-              value: controlVM.control.light1,
+              subtitle: (isOnline && controlVM.control.light1) ? "On" : "Off",
+              subtitleColor: controlVM.control.light1 && isOnline
+                  ? Colors.yellow.shade700
+                  : Colors.grey.shade600,
+              value: isOnline && controlVM.control.light1,
+              activeColor: Colors.amber,
               onChanged: (value) {
                 if (!isOnline) {
                   _showNoInternetDialog(context);
@@ -469,11 +488,17 @@ class _SmartHomePageState extends State<SmartHomePage>
 
             // Light 2
             _toggleCard(
-              icon: Icons.lightbulb_outline,
+              iconWidget: _buildSmartHomeLightIcon(
+                isOn: controlVM.control.light2 && isOnline,
+              ),
               iconColor: Colors.amber,
               title: "Light 2",
-              subtitle: controlVM.control.light2 ? "On" : "Off",
-              value: controlVM.control.light2,
+              subtitle: (isOnline && controlVM.control.light2) ? "On" : "Off",
+              subtitleColor: controlVM.control.light2 && isOnline
+                  ? Colors.yellow.shade700
+                  : Colors.grey.shade600,
+              value: isOnline && controlVM.control.light2,
+              activeColor: Colors.amber,
               onChanged: (value) {
                 if (!isOnline) {
                   _showNoInternetDialog(context);
@@ -497,8 +522,8 @@ class _SmartHomePageState extends State<SmartHomePage>
               ),
               iconColor: Colors.blue,
               title: "Fan",
-              subtitle: controlVM.control.fan ? "Running" : "Off",
-              value: controlVM.control.fan,
+              subtitle: (isOnline && controlVM.control.fan) ? "Running" : "Off",
+              value: isOnline && controlVM.control.fan,
               onChanged: (value) {
                 if (!isOnline) {
                   _showNoInternetDialog(context);
@@ -514,8 +539,10 @@ class _SmartHomePageState extends State<SmartHomePage>
               icon: Icons.notifications_active_outlined,
               iconColor: Colors.red,
               title: "Alarm",
-              subtitle: controlVM.control.alarm ? "Armed" : "Disarmed",
-              value: controlVM.control.alarm,
+              subtitle: (isOnline && controlVM.control.alarm)
+                  ? "Armed"
+                  : "Disarmed",
+              value: isOnline && controlVM.control.alarm,
               activeColor: Colors.red,
               onChanged: (value) {
                 if (!isOnline) {
@@ -600,6 +627,7 @@ class _SmartHomePageState extends State<SmartHomePage>
     required bool value,
     required ValueChanged<bool> onChanged,
     Color? activeColor,
+    Color? subtitleColor,
   }) {
     assert(icon != null || iconWidget != null, 'Provide icon or iconWidget');
     return Container(
@@ -617,14 +645,15 @@ class _SmartHomePageState extends State<SmartHomePage>
       ),
       child: Row(
         children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: iconColor.withValues(alpha: .1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: iconWidget ?? Icon(icon, color: iconColor),
-          ),
+          iconWidget ??
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: iconColor.withValues(alpha: .1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(icon, color: iconColor),
+              ),
           const SizedBox(width: 16),
           Expanded(
             child: Column(
@@ -639,7 +668,10 @@ class _SmartHomePageState extends State<SmartHomePage>
                 ),
                 Text(
                   subtitle,
-                  style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+                  style: TextStyle(
+                    color: subtitleColor ?? Colors.grey.shade600,
+                    fontSize: 13,
+                  ),
                 ),
               ],
             ),
@@ -650,6 +682,32 @@ class _SmartHomePageState extends State<SmartHomePage>
             onChanged: onChanged,
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildSmartHomeLightIcon({required bool isOn}) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 280),
+      curve: Curves.easeInOut,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: isOn ? Colors.yellow.shade100 : Colors.grey.shade100,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: isOn
+            ? [
+                BoxShadow(
+                  color: Colors.yellow.shade200.withValues(alpha: 0.35),
+                  blurRadius: 16,
+                  spreadRadius: 1,
+                ),
+              ]
+            : null,
+      ),
+      child: Icon(
+        MdiIcons.lightbulbOnOutline,
+        size: 28,
+        color: isOn ? Colors.yellow.shade700 : Colors.grey.shade600,
       ),
     );
   }

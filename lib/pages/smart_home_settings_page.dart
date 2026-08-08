@@ -285,6 +285,76 @@ class _SmartHomeSettingsPageState extends State<SmartHomeSettingsPage> {
               ),
             ),
 
+            const SizedBox(height: 16),
+
+            // Neighbour Alerts toggle
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: .05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: Colors.green.shade50,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(
+                      Icons.shield_outlined,
+                      color: Colors.green.shade700,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          "Neighbour Alerts",
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 16,
+                          ),
+                        ),
+                        Text(
+                          settingsVM.settings.neighbourAlertsEnabled
+                              ? "Linked neighbours will be alerted if your alarm sounds"
+                              : "Your alarm stays local — neighbours won't be notified",
+                          style: TextStyle(
+                            color: Colors.grey.shade600,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Switch(
+                    value: settingsVM.settings.neighbourAlertsEnabled,
+                    activeThumbColor: Colors.green.shade700,
+                    onChanged: settingsVM.isLoading
+                        ? null
+                        : (value) {
+                            if (!isOnline) {
+                              _showNoInternetDialog(context);
+                              return;
+                            }
+                            settingsVM.toggleNeighbourAlerts(value);
+                          },
+                  ),
+                ],
+              ),
+            ),
+
             const SizedBox(height: 24),
 
             SizedBox(

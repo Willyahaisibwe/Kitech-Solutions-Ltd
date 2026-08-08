@@ -16,6 +16,7 @@ import 'package:smart_crop_dryer/services/smart_home_control_service.dart';
 import 'package:smart_crop_dryer/services/smart_home_device_info_service.dart';
 import 'package:smart_crop_dryer/services/smart_home_sensors_service.dart';
 import 'package:smart_crop_dryer/services/smart_home_settings_service.dart';
+import 'package:smart_crop_dryer/services/smart_home_espnow_service.dart';
 
 final getIt = GetIt.instance;
 
@@ -53,4 +54,5 @@ void setupDependencies() {
   getIt.registerSingleton<SmartHomeSettingsService>(
     SmartHomeSettingsService(null),
   );
+  getIt.registerSingleton<SmartHomeEspNowService>(SmartHomeEspNowService(null));
 }

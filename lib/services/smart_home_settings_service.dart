@@ -45,6 +45,7 @@ class SmartHomeSettingsService {
             alarmEnabled: false,
             autoLight: false,
             thresholdTemp: 30.0,
+            neighbourAlertsEnabled: false,
           );
         })
         .handleError((error) {
@@ -52,6 +53,7 @@ class SmartHomeSettingsService {
             alarmEnabled: false,
             autoLight: false,
             thresholdTemp: 30.0,
+            neighbourAlertsEnabled: false,
           );
         });
   }

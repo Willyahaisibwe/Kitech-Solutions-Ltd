@@ -53,7 +53,10 @@ import 'package:smart_crop_dryer/view_models/smart_home_device_info_view_model.d
 import 'package:smart_crop_dryer/view_models/smart_home_network_view_model.dart';
 import 'package:smart_crop_dryer/view_models/smart_home_sensors_view_model.dart';
 import 'package:smart_crop_dryer/view_models/smart_home_settings_view_model.dart';
+import 'package:smart_crop_dryer/view_models/smart_home_espnow_view_model.dart';
+import 'package:smart_crop_dryer/services/smart_home_espnow_service.dart';
 import 'package:smart_crop_dryer/pages/smart_home_page.dart';
+import 'package:smart_crop_dryer/pages/smart_home_espnow_page.dart';
 import 'package:smart_crop_dryer/pages/smart_home_settings_page.dart';
 import 'package:smart_crop_dryer/services/app_update_service.dart';
 import 'package:smart_crop_dryer/widgets/update_dialog.dart';
@@ -440,6 +443,54 @@ Future<void> main() async {
                 );
           },
         ),
+
+        //SmartHomeEspNowViewModel depends on AuthViewModel (deviceId) AND
+        //SmartHomeDeviceInfoViewModel (this device's own MAC + owner name)
+        ChangeNotifierProxyProvider2<
+          AuthViewModel,
+          SmartHomeDeviceInfoViewModel,
+          SmartHomeEspNowViewModel
+        >(
+          create: (_) => SmartHomeEspNowViewModel(
+            espNowService: getIt<SmartHomeEspNowService>(),
+            myMac: '',
+            myOwnerName: '',
+          ),
+          update: (_, authViewModel, deviceInfoViewModel, previous) {
+            final deviceId = authViewModel.user?.homeDeviceId;
+            final myMac = deviceInfoViewModel.deviceInfo?.macAddress ?? '';
+            final myOwnerName = authViewModel.user?.name ?? '';
+            final myPhotoUrl = authViewModel.user?.profileImageUrl;
+            final myOwnerUid = authViewModel.user?.id;
+
+            if (previous != null) {
+              previous.myPhotoUrl = myPhotoUrl;
+              previous.myOwnerUid = myOwnerUid;
+            }
+
+            if (deviceId != null &&
+                (previous?.espNowService.deviceId != deviceId ||
+                    previous?.myMac != myMac ||
+                    previous?.myOwnerName != myOwnerName)) {
+              return SmartHomeEspNowViewModel(
+                espNowService: getIt<SmartHomeEspNowService>(),
+                myMac: myMac,
+                myOwnerName: myOwnerName,
+                myPhotoUrl: myPhotoUrl,
+                myOwnerUid: myOwnerUid,
+                deviceId: deviceId,
+              );
+            }
+            return previous ??
+                SmartHomeEspNowViewModel(
+                  espNowService: getIt<SmartHomeEspNowService>(),
+                  myMac: myMac,
+                  myOwnerName: myOwnerName,
+                  myPhotoUrl: myPhotoUrl,
+                  myOwnerUid: myOwnerUid,
+                );
+          },
+        ),
       ],
       child: const MyApp(),
     ),
@@ -492,6 +543,7 @@ class MyApp extends StatelessWidget {
         '/serviceSelector': (context) => const ServiceSelectorPage(),
         '/homeHome': (context) => const SmartHomePage(),
         '/smartHomeSettings': (context) => const SmartHomeSettingsPage(),
+        '/smartHomeEspNow': (context) => const SmartHomeEspNowPage(),
         '/marketplace': (context) => const MarketplacePage(),
         '/myListings': (context) => const MyListingsPage(),
       },

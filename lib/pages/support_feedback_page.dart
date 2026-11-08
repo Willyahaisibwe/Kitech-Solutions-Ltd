@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:provider/provider.dart';
+import 'package:smart_crop_dryer/view_models/language_view_model.dart';
 
 class SupportFeedbackPage extends StatelessWidget {
   final String supportEmail = "williamahaisibwe@gmail.com";
@@ -10,6 +12,7 @@ class SupportFeedbackPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final languageViewModel = context.watch<LanguageViewModel>();
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
@@ -20,7 +23,7 @@ class SupportFeedbackPage extends StatelessWidget {
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          "Support & Feedback",
+          languageViewModel.t('support_feedback'),
           style: TextStyle(
             color: Colors.grey.shade800,
             fontWeight: FontWeight.bold,
@@ -55,7 +58,7 @@ class SupportFeedbackPage extends StatelessWidget {
                     ),
                     SizedBox(height: 16),
                     Text(
-                      "How can we help?",
+                      languageViewModel.t('how_can_we_help'),
                       style: TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
@@ -64,7 +67,7 @@ class SupportFeedbackPage extends StatelessWidget {
                     ),
                     SizedBox(height: 8),
                     Text(
-                      "We're here to assist you. Choose the best way to reach us.",
+                      languageViewModel.t('here_to_assist'),
                       style: TextStyle(
                         fontSize: 14,
                         color: Colors.white.withValues(alpha: 0.9),
@@ -78,14 +81,14 @@ class SupportFeedbackPage extends StatelessWidget {
             SizedBox(height: 24),
 
             // Contact Support Section
-            _buildSectionHeader("Contact Us"),
+            _buildSectionHeader(languageViewModel.t('contact_us')),
             SizedBox(height: 12),
             _buildContactCard(
               context: context,
               icon: Icons.email_outlined,
-              title: "Email",
-              subtitle: "Get detailed help via email",
-              description: "Best for complex issues that need documentation",
+              title: languageViewModel.t('email_title'),
+              subtitle: languageViewModel.t('email_subtitle'),
+              description: languageViewModel.t('email_description'),
               color: Colors.orange,
               onTap: () => _launchEmail(supportEmail, "Support Request"),
             ),
@@ -93,9 +96,9 @@ class SupportFeedbackPage extends StatelessWidget {
             _buildContactCard(
               context: context,
               icon: MdiIcons.whatsapp,
-              title: "WhatsApp",
-              subtitle: "Quick chat with our team",
-              description: "Best for urgent questions and quick help",
+              title: languageViewModel.t('whatsapp_title'),
+              subtitle: languageViewModel.t('whatsapp_subtitle'),
+              description: languageViewModel.t('whatsapp_description'),
               color: Colors.green,
               onTap: () => _launchWhatsApp(
                 supportWhatsApp,
@@ -106,9 +109,9 @@ class SupportFeedbackPage extends StatelessWidget {
             _buildContactCard(
               context: context,
               icon: Icons.phone_outlined,
-              title: "Call",
-              subtitle: "Speak directly with a support agent",
-              description: "Best for immediate assistance",
+              title: languageViewModel.t('call_title'),
+              subtitle: languageViewModel.t('call_subtitle'),
+              description: languageViewModel.t('call_description'),
               color: Colors.blue,
               onTap: () => _makePhoneCall(supportWhatsApp),
             ),

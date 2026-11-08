@@ -6,6 +6,7 @@ import 'package:smart_crop_dryer/view_models/crop_view_model.dart';
 import 'package:smart_crop_dryer/view_models/max_drying_temp_view_model.dart';
 import 'package:smart_crop_dryer/view_models/network_view_model.dart';
 import 'package:smart_crop_dryer/widgets/confirmation_dialog.dart';
+import 'package:smart_crop_dryer/view_models/language_view_model.dart';
 
 enum CropStatus { good, warning, bad }
 
@@ -53,6 +54,7 @@ class _TemperatureSettingsPageState extends State<TemperatureSettingsPage>
 
   void _onSave() {
     final networkViewModel = context.read<NetworkViewModel>();
+    final languageViewModel = context.read<LanguageViewModel>();
 
     if (!networkViewModel.isConnected) {
       _showNoInternetDialog(context);
@@ -68,7 +70,9 @@ class _TemperatureSettingsPageState extends State<TemperatureSettingsPage>
             children: [
               Icon(Icons.check_circle, color: Colors.white),
               SizedBox(width: 12),
-              Text('Temperature saved: ${_temperature.round()}°C'),
+              Text(
+                '${languageViewModel.t('temperature_saved')}: ${_temperature.round()}°C',
+              ),
             ],
           ),
           backgroundColor: Colors.green.shade600,
@@ -113,19 +117,19 @@ class _TemperatureSettingsPageState extends State<TemperatureSettingsPage>
     }
   }
 
-  String _getTemperatureDescription() {
+  String _getTemperatureDescription(LanguageViewModel languageViewModel) {
     if (_temperature < 30) {
-      return "Low temperature - suitable for delicate crops";
+      return languageViewModel.t('low_temp_desc');
     } else if (_temperature < 50) {
-      return "Moderate temperature - good for most crops";
+      return languageViewModel.t('moderate_temp_desc');
     } else if (_temperature < 65) {
-      return "High temperature - use with caution";
+      return languageViewModel.t('high_temp_desc');
     } else {
-      return "Very high temperature - may damage crops";
+      return languageViewModel.t('very_high_temp_desc');
     }
   }
 
-  Widget _buildCropCompatibility() {
+  Widget _buildCropCompatibility(LanguageViewModel languageViewModel) {
     if (selectedCrops.isEmpty) {
       return Container(
         padding: EdgeInsets.all(24),
@@ -143,7 +147,7 @@ class _TemperatureSettingsPageState extends State<TemperatureSettingsPage>
             ),
             SizedBox(height: 12),
             Text(
-              "No crops selected",
+              languageViewModel.t('no_crops_selected'),
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
@@ -152,7 +156,7 @@ class _TemperatureSettingsPageState extends State<TemperatureSettingsPage>
             ),
             SizedBox(height: 4),
             Text(
-              "Select crops to see temperature compatibility",
+              languageViewModel.t('select_crops_to_see_compat'),
               style: TextStyle(fontSize: 14, color: Colors.grey.shade500),
             ),
           ],
@@ -179,9 +183,9 @@ class _TemperatureSettingsPageState extends State<TemperatureSettingsPage>
           CropStatus.bad => Colors.red.shade50,
         };
         final message = switch (status) {
-          CropStatus.good => 'Ideal Temperature',
-          CropStatus.warning => 'Acceptable Range',
-          CropStatus.bad => 'Too High/Low',
+          CropStatus.good => languageViewModel.t('ideal_temperature'),
+          CropStatus.warning => languageViewModel.t('acceptable_range'),
+          CropStatus.bad => languageViewModel.t('too_high_low'),
         };
 
         return Container(
@@ -221,7 +225,7 @@ class _TemperatureSettingsPageState extends State<TemperatureSettingsPage>
                     ),
                     SizedBox(height: 2),
                     Text(
-                      "Optimal: ${crop.minTemp.toInt()}–${crop.maxTemp.toInt()}°C",
+                      "${languageViewModel.t('optimal_label')}: ${crop.minTemp.toInt()}–${crop.maxTemp.toInt()}°C",
                       style: TextStyle(
                         fontSize: 13,
                         color: Colors.grey.shade600,
@@ -254,6 +258,7 @@ class _TemperatureSettingsPageState extends State<TemperatureSettingsPage>
 
   @override
   Widget build(BuildContext context) {
+    final languageViewModel = context.watch<LanguageViewModel>();
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
@@ -272,7 +277,7 @@ class _TemperatureSettingsPageState extends State<TemperatureSettingsPage>
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          "Temperature Settings",
+          languageViewModel.t('temperature_settings'),
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w600,
@@ -320,7 +325,7 @@ class _TemperatureSettingsPageState extends State<TemperatureSettingsPage>
                         ),
                         SizedBox(width: 12),
                         Text(
-                          'Maximum Drying Temperature',
+                          languageViewModel.t('maximum_drying_temperature'),
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -355,7 +360,7 @@ class _TemperatureSettingsPageState extends State<TemperatureSettingsPage>
                           ),
                           SizedBox(height: 8),
                           Text(
-                            _getTemperatureDescription(),
+                            _getTemperatureDescription(languageViewModel),
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               fontSize: 14,
@@ -459,7 +464,7 @@ class _TemperatureSettingsPageState extends State<TemperatureSettingsPage>
                         ),
                         SizedBox(width: 12),
                         Text(
-                          "Crop Compatibility",
+                          languageViewModel.t('crop_compatibility'),
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -484,17 +489,17 @@ class _TemperatureSettingsPageState extends State<TemperatureSettingsPage>
                             _buildLegendItem(
                               icon: Icons.check_circle,
                               color: Colors.green.shade600,
-                              label: "Ideal",
+                              label: languageViewModel.t('ideal'),
                             ),
                             _buildLegendItem(
                               icon: Icons.warning,
                               color: Colors.orange.shade600,
-                              label: "Acceptable",
+                              label: languageViewModel.t('acceptable'),
                             ),
                             _buildLegendItem(
                               icon: Icons.error,
                               color: Colors.red.shade600,
-                              label: "Risky",
+                              label: languageViewModel.t('risky'),
                             ),
                           ],
                         ),
@@ -503,7 +508,7 @@ class _TemperatureSettingsPageState extends State<TemperatureSettingsPage>
                     ],
 
                     // All crops displayed without scrolling
-                    _buildCropCompatibility(),
+                    _buildCropCompatibility(languageViewModel),
                   ],
                 ),
               ),
@@ -557,7 +562,7 @@ class _TemperatureSettingsPageState extends State<TemperatureSettingsPage>
                               ),
                               SizedBox(width: 8),
                               Text(
-                                'Cancel',
+                                languageViewModel.t('cancel'),
                                 style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.w600,
@@ -603,7 +608,7 @@ class _TemperatureSettingsPageState extends State<TemperatureSettingsPage>
                               ),
                               SizedBox(width: 8),
                               Text(
-                                'Save Settings',
+                                languageViewModel.t('save_settings'),
                                 style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.w600,
@@ -647,26 +652,27 @@ class _TemperatureSettingsPageState extends State<TemperatureSettingsPage>
   }
 
   void showSaveChangesDialog(BuildContext context, VoidCallback onSave) {
+    final languageViewModel = context.read<LanguageViewModel>();
     showConfirmationDialog(
       context: context,
-      title: 'Save Changes',
-      message: 'Do you want to save your changes?',
+      title: languageViewModel.t('save_changes'),
+      message: languageViewModel.t('save_changes_confirm'),
       icon: Icons.save_outlined,
       iconColor: Colors.green.shade600,
-      confirmText: 'Save',
+      confirmText: languageViewModel.t('save'),
       confirmButtonColor: Colors.green.shade600,
       onConfirm: onSave,
     );
   }
 
   void _showNoInternetDialog(BuildContext context) {
+    final languageViewModel = context.read<LanguageViewModel>();
     showConfirmationDialog(
       context: context,
-      title: 'The system is offline',
-      message:
-          'Your system appears to be offline. Please check your internet connection and try again.',
+      title: languageViewModel.t('system_offline'),
+      message: languageViewModel.t('system_offline_message'),
       icon: Icons.wifi_off,
-      confirmText: 'OK',
+      confirmText: languageViewModel.t('ok'),
       onConfirm: () {},
     );
   }

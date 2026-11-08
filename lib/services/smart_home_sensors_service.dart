@@ -9,18 +9,14 @@ class SmartHomeSensorsService {
 
   SmartHomeSensorsService(String? deviceId) {
     if (deviceId != null && deviceId.isNotEmpty) {
-      ref = FirebaseDatabase.instance.ref(
-        "Devices/SmartHome/$deviceId/sensors",
-      );
+      ref = FirebaseDatabase.instance.ref("Devices/SmartHome/$deviceId");
       _deviceId = deviceId;
     }
   }
 
   void updateDeviceId(String deviceId) {
     if (deviceId.isNotEmpty) {
-      ref = FirebaseDatabase.instance.ref(
-        "Devices/SmartHome/$deviceId/sensors",
-      );
+      ref = FirebaseDatabase.instance.ref("Devices/SmartHome/$deviceId");
       _deviceId = deviceId;
     }
   }
@@ -30,7 +26,14 @@ class SmartHomeSensorsService {
         .map((event) {
           final dynamic value = event.snapshot.value;
           if (value != null && value is Map<dynamic, dynamic>) {
-            return SmartHomeSensors.fromMap(Map<String, dynamic>.from(value));
+            final root = Map<String, dynamic>.from(value);
+            final sensorsMap = root['sensors'] is Map
+                ? Map<String, dynamic>.from(root['sensors'] as Map)
+                : <String, dynamic>{};
+            final networkMap = root['network'] is Map
+                ? Map<String, dynamic>.from(root['network'] as Map)
+                : <String, dynamic>{};
+            return SmartHomeSensors.fromMap({...sensorsMap, ...networkMap});
           }
           return SmartHomeSensors(motion: false, temperature: 0.0);
         })

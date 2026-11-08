@@ -14,6 +14,7 @@ import 'package:smart_crop_dryer/widgets/confirmation_dialog.dart';
 import 'package:smart_crop_dryer/models/voice_command.dart';
 import 'package:smart_crop_dryer/widgets/voice_command_button.dart';
 import 'package:smart_crop_dryer/pages/community_page.dart';
+import 'package:smart_crop_dryer/view_models/language_view_model.dart';
 
 class PageSwitcher extends StatefulWidget {
   const PageSwitcher({super.key});
@@ -27,6 +28,7 @@ class _PageSwitcherState extends State<PageSwitcher> {
   Widget build(BuildContext context) {
     AuthViewModel authViewModel = context.watch<AuthViewModel>();
     NetworkViewModel networkViewModel = context.watch<NetworkViewModel>();
+    LanguageViewModel languageViewModel = context.watch<LanguageViewModel>();
     final hasMultipleServices = (authViewModel.user?.devices.length ?? 0) > 1;
 
     return Scaffold(
@@ -55,7 +57,7 @@ class _PageSwitcherState extends State<PageSwitcher> {
             SizedBox(width: 12),
             Flexible(
               child: Text(
-                "Smart Dryer",
+                languageViewModel.t('app_name'),
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
                   fontSize: 20,
@@ -111,7 +113,9 @@ class _PageSwitcherState extends State<PageSwitcher> {
                       ),
                       SizedBox(width: 6),
                       Text(
-                        networkViewModel.isConnected ? "Online" : "Offline",
+                        networkViewModel.isConnected
+                            ? languageViewModel.t('online')
+                            : languageViewModel.t('offline'),
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
@@ -133,7 +137,7 @@ class _PageSwitcherState extends State<PageSwitcher> {
                     Text(
                       networkViewModel.isConnected
                           ? '${networkViewModel.signalStrength.toStringAsFixed(0)} dBm'
-                          : "No signal",
+                          : languageViewModel.t('no_signal'),
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w500,
@@ -243,7 +247,7 @@ class _PageSwitcherState extends State<PageSwitcher> {
                   ),
                   SizedBox(height: 16),
                   Text(
-                    'Hello,',
+                    languageViewModel.t('hello'),
                     style: TextStyle(
                       color: Colors.white.withValues(alpha: .9),
                       fontSize: 14,
@@ -269,7 +273,7 @@ class _PageSwitcherState extends State<PageSwitcher> {
                 children: [
                   _buildDrawerItem(
                     icon: Icons.person_outline,
-                    title: 'Account Settings',
+                    title: languageViewModel.t('account_settings'),
                     onTap: () {
                       Navigator.pop(context);
                       Navigator.pushNamed(context, "/accountSettings");
@@ -277,7 +281,7 @@ class _PageSwitcherState extends State<PageSwitcher> {
                   ),
                   _buildDrawerItem(
                     icon: MdiIcons.flower,
-                    title: 'Select Crops',
+                    title: languageViewModel.t('select_crops'),
                     onTap: () {
                       Navigator.pop(context);
                       Navigator.pushNamed(context, "/cropSelection");
@@ -285,7 +289,7 @@ class _PageSwitcherState extends State<PageSwitcher> {
                   ),
                   _buildDrawerItem(
                     icon: Icons.thermostat_outlined,
-                    title: 'Temperature Settings',
+                    title: languageViewModel.t('temperature_settings'),
                     onTap: () {
                       Navigator.pop(context);
                       Navigator.pushNamed(context, "/temperatureSettings");
@@ -293,7 +297,7 @@ class _PageSwitcherState extends State<PageSwitcher> {
                   ),
                   _buildDrawerItem(
                     icon: Icons.wb_sunny_outlined,
-                    title: 'Weather Info',
+                    title: languageViewModel.t('weather_info'),
                     onTap: () {
                       Navigator.pop(context);
                       Navigator.pushNamed(context, "/weather");
@@ -310,7 +314,7 @@ class _PageSwitcherState extends State<PageSwitcher> {
                   // ),
                   _buildDrawerItem(
                     icon: MdiIcons.messageAlertOutline,
-                    title: 'Support & Feedback',
+                    title: languageViewModel.t('support_feedback'),
                     onTap: () {
                       Navigator.pop(context);
                       Navigator.pushNamed(context, "/supportFeedback");
@@ -318,7 +322,7 @@ class _PageSwitcherState extends State<PageSwitcher> {
                   ),
                   _buildDrawerItem(
                     icon: MdiIcons.accountGroupOutline,
-                    title: 'Community',
+                    title: languageViewModel.t('community'),
                     onTap: () {
                       Navigator.pop(context);
                       Navigator.push(
@@ -332,7 +336,7 @@ class _PageSwitcherState extends State<PageSwitcher> {
                   if (hasMultipleServices)
                     _buildDrawerItem(
                       icon: Icons.swap_horiz,
-                      title: 'Switch Service',
+                      title: languageViewModel.t('switch_service'),
                       onTap: () {
                         Navigator.pop(context);
                         Navigator.pushReplacement(
@@ -351,7 +355,7 @@ class _PageSwitcherState extends State<PageSwitcher> {
                   SizedBox(height: 8),
                   _buildDrawerItem(
                     icon: Icons.logout_outlined,
-                    title: 'Logout',
+                    title: languageViewModel.t('logout'),
                     textColor: Colors.red.shade600,
                     onTap: () {
                       _showLogoutDialog(context);

@@ -10,6 +10,7 @@ import 'package:smart_crop_dryer/view_models/sensor_readings_view_model.dart';
 import 'package:smart_crop_dryer/view_models/auth_view_model.dart';
 import 'package:smart_crop_dryer/widgets/confirmation_dialog.dart';
 import 'package:smart_crop_dryer/widgets/gradient_button.dart';
+import 'package:smart_crop_dryer/view_models/language_view_model.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -86,19 +87,23 @@ class _HomePageState extends State<HomePage>
     }
   }
 
-  String _getTextStatusForTemperature(double temperature, double maxThreshold) {
+  String _getTextStatusForTemperature(
+    double temperature,
+    double maxThreshold,
+    LanguageViewModel languageViewModel,
+  ) {
     double difference = temperature - maxThreshold;
 
     if (difference > 8) {
-      return "Well above limit (+${difference.toStringAsFixed(1)}°C)";
+      return "${languageViewModel.t('well_above_limit')} (+${difference.toStringAsFixed(1)}°C)";
     } else if (difference > 4) {
-      return "Above limit (+${difference.toStringAsFixed(1)}°C)";
+      return "${languageViewModel.t('above_limit')} (+${difference.toStringAsFixed(1)}°C)";
     } else if (difference > 1) {
-      return "Slightly above limit (+${difference.toStringAsFixed(1)}°C)";
+      return "${languageViewModel.t('slightly_above_limit')} (+${difference.toStringAsFixed(1)}°C)";
     } else if (difference > -1) {
-      return "At limit";
+      return languageViewModel.t('at_limit');
     } else {
-      return "Below limit (${difference.abs().toStringAsFixed(1)}°C under)";
+      return "${languageViewModel.t('below_limit')} (${difference.abs().toStringAsFixed(1)}°C ${languageViewModel.t('under')})";
     }
   }
 
@@ -109,6 +114,7 @@ class _HomePageState extends State<HomePage>
     final sensorReadingsViewModel = context.watch<SensorReadingsViewModel>();
     final maxDryingTempViewModel = context.watch<MaxDryingTempViewModel>();
     final controlViewModel = context.watch<ControlViewModel>();
+    final languageViewModel = context.watch<LanguageViewModel>();
 
     final sensorData = sensorReadingsViewModel.sensorReadings;
 
@@ -179,7 +185,7 @@ class _HomePageState extends State<HomePage>
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Kitech Solutions Ltd',
+                          languageViewModel.t('app_name'),
                           style: TextStyle(
                             fontSize: 22,
                             fontWeight: FontWeight.bold,
@@ -189,8 +195,8 @@ class _HomePageState extends State<HomePage>
                         SizedBox(height: 4),
                         Text(
                           controlViewModel.control.autoMode
-                              ? 'Automatic Mode Active'
-                              : 'Manual Control Mode',
+                              ? languageViewModel.t('automatic_mode')
+                              : languageViewModel.t('manual_mode'),
                           style: TextStyle(
                             fontSize: 14,
                             color: Colors.white.withValues(alpha: .9),
@@ -198,17 +204,63 @@ class _HomePageState extends State<HomePage>
                         ),
                       ],
                     ),
-                    Container(
-                      padding: EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: .2),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Icon(
-                        MdiIcons.sprout,
-                        size: 32,
-                        color: Colors.white,
-                      ),
+                    Row(
+                      children: [
+                        PopupMenuButton<String>(
+                          initialValue: languageViewModel.languageCode,
+                          onSelected: (code) =>
+                              languageViewModel.setLanguage(code),
+                          itemBuilder: (context) => [
+                            PopupMenuItem(value: 'en', child: Text('English')),
+                            PopupMenuItem(value: 'lg', child: Text('Luganda')),
+                            PopupMenuItem(
+                              value: 'sw',
+                              child: Text('Kiswahili'),
+                            ),
+                          ],
+                          child: Container(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: .2),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.language,
+                                  size: 18,
+                                  color: Colors.white,
+                                ),
+                                SizedBox(width: 4),
+                                Text(
+                                  languageViewModel.languageCode.toUpperCase(),
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        SizedBox(width: 8),
+                        Container(
+                          padding: EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: .2),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Icon(
+                            MdiIcons.sprout,
+                            size: 32,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -257,7 +309,7 @@ class _HomePageState extends State<HomePage>
                           ),
                           SizedBox(height: 12),
                           Text(
-                            'Temperature',
+                            languageViewModel.t('temperature'),
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
@@ -301,7 +353,7 @@ class _HomePageState extends State<HomePage>
                               color: Colors.white, // or any contrasting color
                             ),
                             label: Text(
-                              '${_getTextStatusForTemperature(temperature, maxDryingTempViewModel.maxDryingTemp.value)} (${maxDryingTempViewModel.maxDryingTemp.value.round()}°C)',
+                              '${_getTextStatusForTemperature(temperature, maxDryingTempViewModel.maxDryingTemp.value, languageViewModel)} (${maxDryingTempViewModel.maxDryingTemp.value.round()}°C)',
                               style: TextStyle(
                                 fontSize: 15,
                                 color: Colors
@@ -311,7 +363,9 @@ class _HomePageState extends State<HomePage>
                           ),
                           SizedBox(height: 5),
                           TextButton.icon(
-                            label: Text("Temperature settings"),
+                            label: Text(
+                              languageViewModel.t('temperature_settings'),
+                            ),
                             onPressed: () {
                               Navigator.pushNamed(
                                 context,
@@ -366,7 +420,7 @@ class _HomePageState extends State<HomePage>
                           ),
                           SizedBox(height: 12),
                           Text(
-                            'Humidity',
+                            languageViewModel.t('humidity'),
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
@@ -385,10 +439,10 @@ class _HomePageState extends State<HomePage>
                           SizedBox(height: 4),
                           Text(
                             humidity > 70
-                                ? 'High'
+                                ? languageViewModel.t('high')
                                 : humidity > 40
-                                ? 'Optimal'
-                                : 'Low',
+                                ? languageViewModel.t('optimal')
+                                : languageViewModel.t('low'),
                             style: TextStyle(
                               fontSize: 12,
                               color: Colors.grey.shade600,
@@ -454,7 +508,7 @@ class _HomePageState extends State<HomePage>
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  'Selected Crops',
+                                  languageViewModel.t('selected_crops'),
                                   style: TextStyle(
                                     fontSize: 15.6,
                                     fontWeight: FontWeight.bold,
@@ -465,7 +519,7 @@ class _HomePageState extends State<HomePage>
                                 ),
                                 SizedBox(height: 4),
                                 Text(
-                                  '${selectedCrops.length} crop(s) selected',
+                                  '${selectedCrops.length} ${languageViewModel.t('crops_selected')}',
                                   style: TextStyle(
                                     fontSize: 12,
                                     color: Colors.grey.shade600,
@@ -496,7 +550,7 @@ class _HomePageState extends State<HomePage>
                                 borderRadius: BorderRadius.circular(20),
                               ),
                               child: Text(
-                                'Select Crops',
+                                languageViewModel.t('select_crops'),
                                 style: TextStyle(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w600,
@@ -677,7 +731,7 @@ class _HomePageState extends State<HomePage>
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  'Drying Fan',
+                                  languageViewModel.t('drying_fan'),
                                   style: TextStyle(
                                     fontSize: 18,
                                     fontWeight: FontWeight.bold,
@@ -688,8 +742,8 @@ class _HomePageState extends State<HomePage>
                                 Text(
                                   controlViewModel.control.fanState &&
                                           networkViewModel.isConnected
-                                      ? 'RUNNING'
-                                      : 'STOPPED',
+                                      ? languageViewModel.t('running')
+                                      : languageViewModel.t('stopped'),
                                   style: TextStyle(
                                     fontSize: 14,
                                     fontWeight: FontWeight.w600,
@@ -760,8 +814,8 @@ class _HomePageState extends State<HomePage>
                           SizedBox(width: 12),
                           Text(
                             controlViewModel.control.autoMode
-                                ? 'Automatic Mode Active'
-                                : 'Manual Control Mode',
+                                ? languageViewModel.t('automatic_mode')
+                                : languageViewModel.t('manual_mode'),
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
@@ -783,7 +837,7 @@ class _HomePageState extends State<HomePage>
                           child: GradientButton(
                             onPressed: _onTurnOnFan,
                             icon: Icon(Icons.power),
-                            text: 'Turn On Fan',
+                            text: languageViewModel.t('turn_on_fan'),
                             isEnabled: !controlViewModel.control.fanState,
                             gradientColors: [
                               Colors.green.shade600,
@@ -798,7 +852,9 @@ class _HomePageState extends State<HomePage>
                           child: GradientButton(
                             onPressed: _onTurnOffFan,
                             icon: Icon(Icons.power_off),
-                            text: 'Turn Off Fan',
+                            text: 'Turn Off Fan'.isEmpty
+                                ? ''
+                                : languageViewModel.t('turn_off_fan'),
                             isEnabled: controlViewModel.control.fanState,
                             gradientColors: [
                               Colors.red.shade600,
@@ -818,7 +874,7 @@ class _HomePageState extends State<HomePage>
                       child: GradientButton(
                         onPressed: _onSwitchToAutomaticMode,
                         icon: Icon(Icons.autorenew),
-                        text: 'Switch to Automatic Mode',
+                        text: languageViewModel.t('switch_to_automatic'),
                         isEnabled: !controlViewModel.control.autoMode,
                         gradientColors: [
                           Theme.of(context).colorScheme.primary,
@@ -882,7 +938,7 @@ class _HomePageState extends State<HomePage>
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  'Dryer Light',
+                                  languageViewModel.t('dryer_light'),
                                   style: TextStyle(
                                     fontSize: 18,
                                     fontWeight: FontWeight.bold,
@@ -949,8 +1005,8 @@ class _HomePageState extends State<HomePage>
                         text:
                             controlViewModel.control.lightState &&
                                 networkViewModel.isConnected
-                            ? 'Turn Off Light'
-                            : 'Turn On Light',
+                            ? languageViewModel.t('turn_off_light')
+                            : languageViewModel.t('turn_on_light'),
                         gradientColors:
                             controlViewModel.control.lightState &&
                                 networkViewModel.isConnected

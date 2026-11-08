@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:smart_crop_dryer/widgets/radio_player_card.dart';
+import 'package:provider/provider.dart';
+import 'package:smart_crop_dryer/view_models/language_view_model.dart';
 
 class CommunityPage extends StatelessWidget {
   const CommunityPage({super.key});
 
-  Widget _buildMarketplaceCard(BuildContext context) {
+  Widget _buildMarketplaceCard(
+    BuildContext context,
+    LanguageViewModel languageViewModel,
+  ) {
     final primary = Theme.of(context).colorScheme.primary;
 
     return Card(
@@ -41,8 +46,8 @@ class CommunityPage extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Marketplace',
+                    Text(
+                      languageViewModel.t('marketplace'),
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
@@ -50,7 +55,7 @@ class CommunityPage extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Browse products, tools and supplies',
+                      languageViewModel.t('browse_products'),
                       style: TextStyle(
                         fontSize: 13,
                         color: Colors.grey.shade600,
@@ -70,10 +75,11 @@ class CommunityPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final languageViewModel = context.watch<LanguageViewModel>();
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
-        title: const Text('Community'),
+        title: Text(languageViewModel.t('community')),
         backgroundColor: Colors.white,
         elevation: 0,
         foregroundColor: Colors.grey.shade800,
@@ -83,7 +89,7 @@ class CommunityPage extends StatelessWidget {
         children: [
           const RadioPlayerCard(),
           const SizedBox(height: 16),
-          _buildMarketplaceCard(context),
+          _buildMarketplaceCard(context, languageViewModel),
         ],
       ),
     );

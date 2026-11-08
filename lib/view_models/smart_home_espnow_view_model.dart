@@ -53,6 +53,12 @@ class SmartHomeEspNowViewModel extends ChangeNotifier {
   int _resolveRequestId = 0;
   Timer? _macRetryTimer;
 
+  // Caches device-ID -> display-name lookups for the "Relayed via ..."
+  // badge, so we never show a raw device ID and never re-fetch a name
+  // we've already resolved this session.
+  final Map<String, String> _deviceNameCache = {};
+  final Set<String> _pendingDeviceNameLookups = {};
+
   SmartHomeEspNowViewModel({
     required this.espNowService,
     this.myMac = '',
@@ -238,6 +244,45 @@ class SmartHomeEspNowViewModel extends ChangeNotifier {
       _optimisticLinked[_key(neighbour.mac)] = true;
       notifyListeners();
       rethrow;
+    }
+  }
+
+  /// Synchronous lookup for UI use — returns a cached name immediately if
+  /// known, otherwise kicks off a background resolve (via linkedBy data
+  /// already in state, then a direct Firebase lookup) and returns null
+  /// until that completes, at which point listeners are notified.
+  String? cachedNameForDeviceId(String? deviceId) {
+    if (deviceId == null || deviceId.isEmpty) return null;
+    if (_deviceNameCache.containsKey(deviceId)) {
+      return _deviceNameCache[deviceId];
+    }
+
+    // Cheap path: we may already have this device's name from a resolved
+    // discovery scan, with zero extra Firebase reads.
+    for (final n in _resolvedDiscovered) {
+      if (n.deviceId == deviceId && n.ownerName.isNotEmpty) {
+        _deviceNameCache[deviceId] = n.ownerName;
+        return n.ownerName;
+      }
+    }
+
+    _resolveDeviceNameInBackground(deviceId);
+    return null;
+  }
+
+  Future<void> _resolveDeviceNameInBackground(String deviceId) async {
+    if (_pendingDeviceNameLookups.contains(deviceId)) {
+      return;
+    }
+    _pendingDeviceNameLookups.add(deviceId);
+    try {
+      final name = await espNowService.resolveDeviceName(deviceId);
+      _deviceNameCache[deviceId] = name ?? 'a neighbouring device';
+      notifyListeners();
+    } catch (_) {
+      _deviceNameCache[deviceId] = 'a neighbouring device';
+    } finally {
+      _pendingDeviceNameLookups.remove(deviceId);
     }
   }
 

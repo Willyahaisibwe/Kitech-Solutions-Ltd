@@ -5,8 +5,9 @@ import 'package:smart_crop_dryer/view_models/auth_view_model.dart';
 import 'package:smart_crop_dryer/view_models/smart_home_control_view_model.dart';
 import 'package:smart_crop_dryer/view_models/smart_home_network_view_model.dart';
 import 'package:smart_crop_dryer/view_models/smart_home_sensors_view_model.dart';
+import 'package:smart_crop_dryer/view_models/smart_home_espnow_view_model.dart';
 import 'package:smart_crop_dryer/widgets/confirmation_dialog.dart';
-import 'package:smart_crop_dryer/pages/community_page.dart';
+// import 'package:smart_crop_dryer/pages/community_page.dart';
 import 'package:smart_crop_dryer/services/auth_service.dart';
 import 'package:smart_crop_dryer/services/error_handler.dart';
 import 'package:smart_crop_dryer/models/voice_command.dart';
@@ -68,6 +69,7 @@ class _SmartHomePageState extends State<SmartHomePage>
     final controlVM = context.watch<SmartHomeControlViewModel>();
     final networkVM = context.watch<SmartHomeNetworkViewModel>();
     final authVM = context.watch<AuthViewModel>();
+    final espNowVM = context.watch<SmartHomeEspNowViewModel>();
 
     final sensors = sensorsVM.sensors;
     final isOnline = networkVM.isConnected;
@@ -286,6 +288,16 @@ class _SmartHomePageState extends State<SmartHomePage>
                   ),
                   _buildDrawerItem(
                     context: context,
+                    icon: Icons.network_check_outlined,
+                    title: 'Network Health',
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.pushNamed(context, "/networkHealth");
+                    },
+                  ),
+                  /*
+                  _buildDrawerItem(
+                    context: context,
                     icon: Icons.wb_sunny_outlined,
                     title: 'Weather Info',
                     onTap: () {
@@ -293,6 +305,7 @@ class _SmartHomePageState extends State<SmartHomePage>
                       Navigator.pushNamed(context, "/weather");
                     },
                   ),
+                  */
                   _buildDrawerItem(
                     context: context,
                     icon: Icons.chat_bubble_outline,
@@ -302,6 +315,7 @@ class _SmartHomePageState extends State<SmartHomePage>
                       Navigator.pushNamed(context, "/supportFeedback");
                     },
                   ),
+                  /*
                   _buildDrawerItem(
                     context: context,
                     icon: Icons.groups_outlined,
@@ -316,6 +330,7 @@ class _SmartHomePageState extends State<SmartHomePage>
                       );
                     },
                   ),
+                  */
                   if (hasMultipleServices)
                     _buildDrawerItem(
                       context: context,
@@ -418,6 +433,11 @@ class _SmartHomePageState extends State<SmartHomePage>
                 ],
               ),
             ),
+
+            if (isOnline && sensors.relayed) ...[
+              const SizedBox(height: 10),
+              _relayedBadge(espNowVM.cachedNameForDeviceId(sensors.relayedBy)),
+            ],
 
             const SizedBox(height: 20),
 
@@ -585,6 +605,37 @@ class _SmartHomePageState extends State<SmartHomePage>
       onTap: onTap,
       contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    );
+  }
+
+  Widget _relayedBadge(String? relayName) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.orange.shade50,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: Colors.orange.shade200),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.wifi_tethering, size: 16, color: Colors.orange.shade700),
+          const SizedBox(width: 8),
+          Flexible(
+            child: Text(
+              relayName != null
+                  ? "Relayed via $relayName"
+                  : "Relayed via a neighbouring device",
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: Colors.orange.shade800,
+              ),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
     );
   }
 

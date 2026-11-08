@@ -4,6 +4,7 @@ import 'package:material_design_icons_flutter/material_design_icons_flutter.dart
 import 'package:provider/provider.dart';
 import 'package:smart_crop_dryer/pages/add_device_page.dart';
 import 'package:smart_crop_dryer/view_models/auth_view_model.dart';
+import 'package:smart_crop_dryer/view_models/language_view_model.dart';
 
 class AccountSettingsPage extends StatefulWidget {
   const AccountSettingsPage({super.key});
@@ -23,6 +24,7 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final languageViewModel = context.watch<LanguageViewModel>();
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
@@ -41,7 +43,7 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          "Account Settings",
+          languageViewModel.t('account_settings'),
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w600,
@@ -56,18 +58,18 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             // Account Information Section
-            _buildAccountInfoSection(),
+            _buildAccountInfoSection(languageViewModel),
             SizedBox(height: 20),
 
             // My Devices Section
-            _buildDevicesSection(),
+            _buildDevicesSection(languageViewModel),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildAccountInfoSection() {
+  Widget _buildAccountInfoSection(LanguageViewModel languageViewModel) {
     return Container(
       padding: EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -100,7 +102,7 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
               ),
               SizedBox(width: 12),
               Text(
-                "Account Information",
+                languageViewModel.t('account_information'),
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -112,31 +114,37 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
           SizedBox(height: 16),
           _buildInfoRow(
             icon: Icons.person_outline,
-            label: "Name",
-            value: userViewModel?.user?.name ?? "Unknown",
+            label: languageViewModel.t('name'),
+            value: userViewModel?.user?.name ?? languageViewModel.t('unknown'),
           ),
           SizedBox(height: 12),
           _buildInfoRow(
             icon: MdiIcons.mapMarkerOutline,
-            label: "Farm Location",
-            value: userViewModel?.user?.farmLocation ?? "Unknown",
+            label: languageViewModel.t('farm_location'),
+            value:
+                userViewModel?.user?.farmLocation ??
+                languageViewModel.t('unknown'),
           ),
           SizedBox(height: 12),
           _buildInfoRow(
             icon: MdiIcons.phone,
-            label: "Phone number",
-            value: userViewModel?.user?.phoneNumber ?? "Unknown",
+            label: languageViewModel.t('phone_number'),
+            value:
+                userViewModel?.user?.phoneNumber ??
+                languageViewModel.t('unknown'),
           ),
           SizedBox(height: 12),
           _buildInfoRow(
             icon: Icons.email,
-            label: "Email",
-            value: userViewModel?.user?.email.toString() ?? "No set",
+            label: languageViewModel.t('email'),
+            value:
+                userViewModel?.user?.email.toString() ??
+                languageViewModel.t('not_set'),
           ),
           SizedBox(height: 12),
           _buildInfoRow(
             icon: Icons.calendar_today_outlined,
-            label: "Member Since",
+            label: languageViewModel.t('member_since'),
             value: DateFormat(
               'yyyy-MM-dd',
             ).format(userViewModel!.user!.createdAt),
@@ -144,8 +152,8 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
           SizedBox(height: 12),
           _buildActionTile(
             icon: Icons.chat_outlined,
-            title: "Contact Support",
-            subtitle: "Get help from our support team",
+            title: languageViewModel.t('contact_support'),
+            subtitle: languageViewModel.t('get_help_support'),
             onTap: () {
               Navigator.pushNamed(context, '/supportFeedback');
             },
@@ -155,7 +163,7 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
     );
   }
 
-  Widget _buildDevicesSection() {
+  Widget _buildDevicesSection(LanguageViewModel languageViewModel) {
     final devices = userViewModel?.user?.devices ?? [];
 
     return Container(
@@ -188,7 +196,7 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
             ),
           ),
           title: Text(
-            "My Devices",
+            languageViewModel.t('my_devices'),
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
@@ -196,7 +204,7 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
             ),
           ),
           subtitle: Text(
-            "${devices.length} linked device${devices.length == 1 ? '' : 's'}",
+            "${devices.length} ${devices.length == 1 ? languageViewModel.t('linked_device') : languageViewModel.t('linked_devices')}",
             style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
           ),
           children: [
@@ -204,7 +212,7 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
               Padding(
                 padding: const EdgeInsets.only(bottom: 12),
                 child: Text(
-                  "No devices linked yet.",
+                  languageViewModel.t('no_devices_linked'),
                   style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
                 ),
               )
@@ -214,7 +222,7 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
                   padding: const EdgeInsets.only(bottom: 12),
                   child: _buildInfoRow(
                     icon: _iconForDeviceType(device.type),
-                    label: _labelForDeviceType(device.type),
+                    label: _labelForDeviceType(device.type, languageViewModel),
                     value: device.deviceId,
                   ),
                 );
@@ -223,8 +231,8 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
             SizedBox(height: 4),
             _buildActionTile(
               icon: Icons.add_circle_outline,
-              title: "Add a Device",
-              subtitle: "Link a new Smart Dryer, Farm, or Home device",
+              title: languageViewModel.t('add_a_device'),
+              subtitle: languageViewModel.t('add_device_subtitle'),
               onTap: () async {
                 await Navigator.push(
                   context,
@@ -256,16 +264,16 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
     }
   }
 
-  String _labelForDeviceType(String type) {
+  String _labelForDeviceType(String type, LanguageViewModel languageViewModel) {
     switch (type) {
       case 'dryer':
-        return 'Smart Dryer';
+        return languageViewModel.t('smart_dryer');
       case 'farm':
-        return 'Smart Farm';
+        return languageViewModel.t('smart_farm');
       case 'home':
-        return 'Smart Home';
+        return languageViewModel.t('smart_home');
       default:
-        return 'Device';
+        return languageViewModel.t('device');
     }
   }
 

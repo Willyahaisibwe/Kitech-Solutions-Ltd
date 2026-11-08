@@ -75,6 +75,52 @@ class SmartHomeEspNowService {
     });
   }
 
+  /// Resolve a device ID directly to a display name (e.g. "King Oyo's Home"),
+  /// without needing its MAC first. Used to label who is relaying our data,
+  /// since that only gives us a device ID, not a MAC.
+  Future<String?> resolveDeviceName(String targetDeviceId) async {
+    if (targetDeviceId.isEmpty) return null;
+
+    String? resolvedName;
+    final infoSnap = await FirebaseDatabase.instance
+        .ref('Devices/SmartHome/$targetDeviceId/info')
+        .get();
+
+    if (infoSnap.exists) {
+      final info = Map<String, dynamic>.from(infoSnap.value as Map);
+      final ownerUid = info['userId']?.toString();
+
+      if (ownerUid != null && ownerUid.isNotEmpty && ownerUid != 'null') {
+        final userDoc = await _firestore
+            .collection('Users')
+            .doc(ownerUid)
+            .get();
+        if (userDoc.exists) {
+          final firstName = userDoc.data()?['name']?.toString();
+          if (firstName != null && firstName.isNotEmpty) {
+            resolvedName = firstName;
+          }
+        }
+      }
+    }
+
+    if (resolvedName == null) {
+      final userQuery = await _firestore
+          .collection('Users')
+          .where('deviceId', isEqualTo: targetDeviceId)
+          .limit(1)
+          .get();
+      if (userQuery.docs.isNotEmpty) {
+        final firstName = userQuery.docs.first.data()['name']?.toString();
+        if (firstName != null && firstName.isNotEmpty) {
+          resolvedName = firstName;
+        }
+      }
+    }
+
+    return resolvedName != null ? "$resolvedName's Home" : null;
+  }
+
   /// Resolve a raw MAC to its owning device + name.
   Future<DiscoveredNeighbour?> resolveMac(
     String mac, {

@@ -8,6 +8,7 @@ import 'package:smart_crop_dryer/models/weather_forecast.dart';
 import 'package:smart_crop_dryer/view_models/weather_view_model.dart';
 import 'package:smart_crop_dryer/models/geo_location.dart';
 import 'package:smart_crop_dryer/pages/location_search_page.dart';
+import 'package:smart_crop_dryer/view_models/language_view_model.dart';
 
 class WeatherPage extends StatefulWidget {
   const WeatherPage({super.key});
@@ -211,6 +212,7 @@ class _WeatherPageState extends State<WeatherPage>
 
   @override
   Widget build(BuildContext context) {
+    final languageViewModel = context.watch<LanguageViewModel>();
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
@@ -229,7 +231,7 @@ class _WeatherPageState extends State<WeatherPage>
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          "Weather Conditions",
+          languageViewModel.t('weather_conditions'),
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w600,
@@ -274,8 +276,8 @@ class _WeatherPageState extends State<WeatherPage>
             )
           : currentWeather == null
           ? (isLocationPermissionError
-                ? _buildLocationPermissionErrorState()
-                : _buildErrorState())
+                ? _buildLocationPermissionErrorState(languageViewModel)
+                : _buildErrorState(languageViewModel))
           : SlideTransition(
               position: _slideAnimation,
               child: SingleChildScrollView(
@@ -287,11 +289,12 @@ class _WeatherPageState extends State<WeatherPage>
                     const SizedBox(height: 16),
 
                     // Weather Details Grid
-                    _buildWeatherDetailsGrid(),
+                    _buildWeatherDetailsGrid(languageViewModel),
                     const SizedBox(height: 16),
 
                     // 5-Day Forecast
-                    if (forecast.isNotEmpty) _buildForecastSection(),
+                    if (forecast.isNotEmpty)
+                      _buildForecastSection(languageViewModel),
                   ],
                 ),
               ),
@@ -392,7 +395,7 @@ class _WeatherPageState extends State<WeatherPage>
     );
   }
 
-  Widget _buildWeatherDetailsGrid() {
+  Widget _buildWeatherDetailsGrid(LanguageViewModel languageViewModel) {
     return Column(
       children: [
         Row(
@@ -400,7 +403,7 @@ class _WeatherPageState extends State<WeatherPage>
             Expanded(
               child: _buildDetailCard(
                 icon: MdiIcons.waterPercent,
-                label: 'Humidity',
+                label: languageViewModel.t('humidity'),
                 value: '${currentWeather!.humidityPercent}%',
                 color: Colors.blue.shade600,
               ),
@@ -409,7 +412,7 @@ class _WeatherPageState extends State<WeatherPage>
             Expanded(
               child: _buildDetailCard(
                 icon: MdiIcons.weatherWindy,
-                label: 'Wind Speed',
+                label: languageViewModel.t('wind_speed'),
                 value: '${currentWeather!.windSpeedMps} m/s',
                 color: Colors.teal.shade600,
               ),
@@ -422,7 +425,7 @@ class _WeatherPageState extends State<WeatherPage>
             Expanded(
               child: _buildDetailCard(
                 icon: MdiIcons.thermometer,
-                label: 'Feels Like',
+                label: languageViewModel.t('feels_like'),
                 value: '${(currentWeather!.temperatureCelsius - 2).round()}°C',
                 color: Colors.orange.shade600,
               ),
@@ -431,7 +434,7 @@ class _WeatherPageState extends State<WeatherPage>
             Expanded(
               child: _buildDetailCard(
                 icon: MdiIcons.eye,
-                label: 'Conditions',
+                label: languageViewModel.t('conditions'),
                 value: currentWeather!.conditionMain,
                 color: Colors.purple.shade600,
               ),
@@ -495,7 +498,7 @@ class _WeatherPageState extends State<WeatherPage>
     );
   }
 
-  Widget _buildForecastSection() {
+  Widget _buildForecastSection(LanguageViewModel languageViewModel) {
     // Group the 3-hour entries into days, keyed by date (ignoring time).
     final Map<DateTime, List<ForecastEntry>> byDay = {};
     for (final entry in forecast) {
@@ -532,7 +535,7 @@ class _WeatherPageState extends State<WeatherPage>
               ),
               const SizedBox(width: 8),
               Text(
-                '5-Day Forecast',
+                languageViewModel.t('day_forecast'),
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
@@ -542,13 +545,19 @@ class _WeatherPageState extends State<WeatherPage>
             ],
           ),
           const SizedBox(height: 16),
-          ...days.map((day) => _buildDayForecastRow(day, byDay[day]!)),
+          ...days.map(
+            (day) => _buildDayForecastRow(day, byDay[day]!, languageViewModel),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildDayForecastRow(DateTime day, List<ForecastEntry> entries) {
+  Widget _buildDayForecastRow(
+    DateTime day,
+    List<ForecastEntry> entries,
+    LanguageViewModel languageViewModel,
+  ) {
     // Representative entry: prefer midday reading, otherwise the first one.
     final representative = entries.firstWhere(
       (e) => e.dateTime.toLocal().hour >= 11 && e.dateTime.toLocal().hour <= 14,
@@ -579,7 +588,9 @@ class _WeatherPageState extends State<WeatherPage>
           SizedBox(
             width: 64,
             child: Text(
-              isToday ? 'Today' : _weekdayLabel(day.weekday),
+              isToday
+                  ? languageViewModel.t('today')
+                  : _weekdayLabel(day.weekday, languageViewModel),
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
@@ -629,12 +640,12 @@ class _WeatherPageState extends State<WeatherPage>
     );
   }
 
-  String _weekdayLabel(int weekday) {
-    const labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-    return labels[weekday - 1];
+  String _weekdayLabel(int weekday, LanguageViewModel languageViewModel) {
+    const keys = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+    return languageViewModel.t(keys[weekday - 1]);
   }
 
-  Widget _buildErrorState() {
+  Widget _buildErrorState(LanguageViewModel languageViewModel) {
     return Center(
       child: Container(
         margin: const EdgeInsets.all(24),
@@ -656,7 +667,7 @@ class _WeatherPageState extends State<WeatherPage>
             Icon(MdiIcons.weatherCloudy, size: 64, color: Colors.grey.shade400),
             const SizedBox(height: 16),
             Text(
-              'Unable to load weather',
+              languageViewModel.t('unable_to_load_weather'),
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
@@ -665,7 +676,7 @@ class _WeatherPageState extends State<WeatherPage>
             ),
             const SizedBox(height: 8),
             Text(
-              'Please check your connection and try again',
+              languageViewModel.t('check_connection_retry'),
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 14, color: Colors.grey.shade500),
             ),
@@ -673,7 +684,7 @@ class _WeatherPageState extends State<WeatherPage>
             ElevatedButton.icon(
               onPressed: _loadWeather,
               icon: const Icon(Icons.refresh),
-              label: const Text('Retry'),
+              label: Text(languageViewModel.t('retry')),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.blue.shade600,
                 foregroundColor: Colors.white,
@@ -692,7 +703,9 @@ class _WeatherPageState extends State<WeatherPage>
     );
   }
 
-  Widget _buildLocationPermissionErrorState() {
+  Widget _buildLocationPermissionErrorState(
+    LanguageViewModel languageViewModel,
+  ) {
     return Center(
       child: Container(
         margin: const EdgeInsets.all(24),
@@ -718,7 +731,7 @@ class _WeatherPageState extends State<WeatherPage>
             ),
             const SizedBox(height: 16),
             Text(
-              'Location access needed',
+              languageViewModel.t('location_access_needed'),
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
@@ -727,7 +740,7 @@ class _WeatherPageState extends State<WeatherPage>
             ),
             const SizedBox(height: 8),
             Text(
-              'Enable location services so we can show weather for where you are.',
+              languageViewModel.t('enable_location_message'),
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 14, color: Colors.grey.shade500),
             ),
@@ -740,7 +753,7 @@ class _WeatherPageState extends State<WeatherPage>
                     await Geolocator.openAppSettings();
                   },
                   icon: const Icon(Icons.settings),
-                  label: const Text('Open Settings'),
+                  label: Text(languageViewModel.t('open_settings')),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: Colors.orange.shade700,
                     padding: const EdgeInsets.symmetric(
@@ -756,7 +769,7 @@ class _WeatherPageState extends State<WeatherPage>
                 ElevatedButton.icon(
                   onPressed: _loadWeather,
                   icon: const Icon(Icons.refresh),
-                  label: const Text('Retry'),
+                  label: Text(languageViewModel.t('retry')),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.blue.shade600,
                     foregroundColor: Colors.white,

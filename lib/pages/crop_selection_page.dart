@@ -6,6 +6,7 @@ import 'package:smart_crop_dryer/view_models/crop_view_model.dart';
 import 'package:smart_crop_dryer/view_models/auth_view_model.dart';
 import 'package:smart_crop_dryer/view_models/network_view_model.dart';
 import 'package:smart_crop_dryer/widgets/confirmation_dialog.dart';
+import 'package:smart_crop_dryer/view_models/language_view_model.dart';
 
 class CropSelectionPage extends StatefulWidget {
   const CropSelectionPage({super.key});
@@ -45,6 +46,7 @@ class _CropSelectionPageState extends State<CropSelectionPage> {
 
   void _onSelectCrops() {
     final networkViewModel = context.read<NetworkViewModel>();
+    final languageViewModel = context.read<LanguageViewModel>();
 
     if (!networkViewModel.isConnected) {
       _showNoInternetDialog(context);
@@ -88,7 +90,7 @@ class _CropSelectionPageState extends State<CropSelectionPage> {
             children: [
               Icon(Icons.check_circle, color: Colors.white),
               SizedBox(width: 8),
-              Text('Crops updated successfully!'),
+              Text(languageViewModel.t('crops_updated')),
             ],
           ),
           backgroundColor: Colors.green.shade600,
@@ -106,13 +108,14 @@ class _CropSelectionPageState extends State<CropSelectionPage> {
 
   @override
   Widget build(BuildContext context) {
+    final languageViewModel = context.watch<LanguageViewModel>();
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
         title: Text(
-          "Select Your Crops",
+          languageViewModel.t('select_your_crops'),
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w600,
@@ -152,7 +155,7 @@ class _CropSelectionPageState extends State<CropSelectionPage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Selected (${pendingSelectedCrops.length})',
+                          '${languageViewModel.t('selected_count')} (${pendingSelectedCrops.length})',
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
@@ -204,7 +207,7 @@ class _CropSelectionPageState extends State<CropSelectionPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Available Crops',
+                        languageViewModel.t('available_crops'),
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
@@ -353,7 +356,7 @@ class _CropSelectionPageState extends State<CropSelectionPage> {
                                 ),
                                 SizedBox(width: 8),
                                 Text(
-                                  'Cancel',
+                                  languageViewModel.t('cancel'),
                                   style: TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.w600,
@@ -403,7 +406,7 @@ class _CropSelectionPageState extends State<CropSelectionPage> {
                                 ),
                                 SizedBox(width: 8),
                                 Text(
-                                  'Done',
+                                  languageViewModel.t('done'),
                                   style: TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.w600,
@@ -427,26 +430,27 @@ class _CropSelectionPageState extends State<CropSelectionPage> {
   }
 
   void showSaveChangesDialog(BuildContext context, VoidCallback onSave) {
+    final languageViewModel = context.read<LanguageViewModel>();
     showConfirmationDialog(
       context: context,
-      title: 'Save Changes',
-      message: 'Do you want to save your changes?',
+      title: languageViewModel.t('save_changes'),
+      message: languageViewModel.t('save_changes_confirm'),
       icon: Icons.save_outlined,
       iconColor: Colors.green.shade600,
-      confirmText: 'Save',
+      confirmText: languageViewModel.t('save'),
       confirmButtonColor: Colors.green.shade600,
       onConfirm: onSave,
     );
   }
 
   void _showNoInternetDialog(BuildContext context) {
+    final languageViewModel = context.read<LanguageViewModel>();
     showConfirmationDialog(
       context: context,
-      title: 'The system is offline',
-      message:
-          'Your system appears to be offline. Please check your internet connection and try again.',
+      title: languageViewModel.t('system_offline'),
+      message: languageViewModel.t('system_offline_message'),
       icon: Icons.wifi_off,
-      confirmText: 'OK',
+      confirmText: languageViewModel.t('ok'),
       onConfirm: () {},
     );
   }

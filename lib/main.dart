@@ -58,10 +58,12 @@ import 'package:smart_crop_dryer/services/smart_home_espnow_service.dart';
 import 'package:smart_crop_dryer/pages/smart_home_page.dart';
 import 'package:smart_crop_dryer/pages/smart_home_espnow_page.dart';
 import 'package:smart_crop_dryer/pages/smart_home_settings_page.dart';
+import 'package:smart_crop_dryer/pages/network_health_page.dart';
 import 'package:smart_crop_dryer/services/app_update_service.dart';
 import 'package:smart_crop_dryer/widgets/update_dialog.dart';
 import 'package:smart_crop_dryer/pages/marketplace_page.dart';
 import 'package:smart_crop_dryer/pages/my_listings_page.dart';
+import 'package:smart_crop_dryer/view_models/language_view_model.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
@@ -87,6 +89,17 @@ Future<void> main() async {
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => AuthViewModel()),
+        ChangeNotifierProxyProvider<AuthViewModel, LanguageViewModel>(
+          create: (_) => LanguageViewModel(),
+          update: (_, authViewModel, previous) {
+            final vm = previous ?? LanguageViewModel();
+            final deviceId =
+                authViewModel.user?.dryerDeviceId ??
+                authViewModel.user?.deviceID;
+            vm.updateDeviceId(deviceId);
+            return vm;
+          },
+        ),
 
         // Proxy providers to update ViewModels based on AuthViewModel changes
 
@@ -544,6 +557,7 @@ class MyApp extends StatelessWidget {
         '/homeHome': (context) => const SmartHomePage(),
         '/smartHomeSettings': (context) => const SmartHomeSettingsPage(),
         '/smartHomeEspNow': (context) => const SmartHomeEspNowPage(),
+        '/networkHealth': (context) => const NetworkHealthPage(),
         '/marketplace': (context) => const MarketplacePage(),
         '/myListings': (context) => const MyListingsPage(),
       },

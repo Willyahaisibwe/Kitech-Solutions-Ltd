@@ -27,7 +27,7 @@ class _DownloadProgressDialog extends StatefulWidget {
 class _DownloadProgressDialogState extends State<_DownloadProgressDialog> {
   double _progress = 0.0;
   String? _error;
-  final CancelToken _cancelToken = CancelToken();
+  CancelToken _cancelToken = CancelToken();
 
   @override
   void initState() {
@@ -46,18 +46,28 @@ class _DownloadProgressDialogState extends State<_DownloadProgressDialog> {
         },
       );
 
-      try {
-        await AppUpdateService().markLatestVersionHandled();
-      } catch (_) {}
-
       if (!mounted) return;
       navigator.pop();
 
       await OpenFilex.open(path);
     } catch (e) {
       if (!mounted) return;
-      setState(() => _error = 'Download failed: $e');
+      debugPrint('Update download failed: $e');
+      setState(() {
+        _error = e is DioException && e.response?.statusCode == 504
+            ? 'GitHub timed out while serving this APK (HTTP 504). Please retry, or ask the app administrator to check the release download link.'
+            : 'Download failed: $e';
+      });
     }
+  }
+
+  void _retryDownload() {
+    setState(() {
+      _error = null;
+      _progress = 0.0;
+      _cancelToken = CancelToken();
+    });
+    _startDownload();
   }
 
   @override
@@ -87,10 +97,14 @@ class _DownloadProgressDialogState extends State<_DownloadProgressDialog> {
         ],
       ),
       actions: [
+        if (_error != null)
+          TextButton(
+            onPressed: _retryDownload,
+            child: const Text('Retry'),
+          ),
         TextButton(
           onPressed: () async {
             final navigator = Navigator.of(context);
-            await AppUpdateService().markLatestVersionHandled();
             _cancelToken.cancel();
             navigator.pop();
           },
